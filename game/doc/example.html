@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Game library Example</title>
+    <meta charset="UTF-8"/>
+    <link href="../library.html" rel="import"/>
+    <link href="../../bases/library.html" rel="import"/>
+  </head>
+  <body style="background-color: black; position:relative;"></body>
+     <div class="gameGlobalDiv" id="gameDiv" width=1240 height=720 >
+       <canvas class="gameCanvas"></canvas>
+       <canvas class="gameHudItem" id="healthBar"></canvas>
+       <canvas class="gameHudItem" id="energyBar"></canvas>
+       <div class="gamePauseMenu">
+         <button onClick="GM.start()">resume</button>
+       </div>
+     </div>
+  </body>
+</html>
