@@ -1,4 +1,3 @@
-console.log('include : weapons');
 Game.weapons = (function(){
   var weapons= {};
 //______________________________________________________________________________

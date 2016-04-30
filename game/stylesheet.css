@@ -1,11 +1,12 @@
 .gameGlobalDiv {
   position: relative;
   background-color: black;
-  border: 1px solid white;
 }
 .gameCanvas {
+  position: absolute;
   width=100%;
   height=100%;
+  background-color:transparent;
 }
 .gamePauseMenu {
   display:none;
