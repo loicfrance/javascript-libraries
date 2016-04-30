@@ -200,6 +200,9 @@ Game.Map = (function(){
       }
       ctx.restore();
     }
+    if(!this.getHud().getContext()) {
+      this.getHud().render(ctx, rect.width(), rect.height());
+    }
     this.showMouseOverInfos(gameManager, objects, ctx);
   };
   GameMap.prototype.getObjectAt = function( objects, point ) {

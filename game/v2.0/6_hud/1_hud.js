@@ -3,8 +3,10 @@ Game.hud.Hud = (function(){
   var Hud = function(canvas) {
     this.views = [];
     this.currentView = null;
-    this.context2d = canvas.getContext('2d');
-    canvas.style.background = '#00000000';
+    if(canvas) {
+      this.context2d = canvas.getContext('2d');
+      canvas.style.background = '#00000000';
+    }
   };
   Hud.prototype.addView = function( view ) {
     this.views.push(view);
