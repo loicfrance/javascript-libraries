@@ -12,8 +12,8 @@ Game.Map = (function(){
       this.contexts[i] = canvases[i].getContext('2d');
       this.contexts[i].font = "20px Verdana";
     }
-    this.gameWidth  = width  | canvases[i].width ;
-    this.gameHeight = height | canvases[i].height;
+    this.gameWidth  = width  | canvases[0].width ;
+    this.gameHeight = height | canvases[0].height;
     this.visibleRect = new Rect(0, 0, this.gameWidth, this.gameHeight);
   };
   //______________________________________________________________________________
