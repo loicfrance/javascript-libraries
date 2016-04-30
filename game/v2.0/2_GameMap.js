@@ -9,14 +9,12 @@ Game.Map = (function(){
     if(i===0)
     console.exception('at least one canvas must be attached to the GameMap');
     while(i-->0) {
-      this.contexts[i] = canvas[i].getContext('2d');
+      this.contexts[i] = canvases[i].getContext('2d');
       this.contexts[i].font = "20px Verdana";
     }
-    this.gameWidth = width | gameCanvases[i].width;
-    this.gameHeight = height | gameCanvases[i].height;
-    this.gameWidth = width | canvas.width;
-    this.gameHeight = height | canvas.height;
-    this.visibleRect = new Rect(0, 0, width, height);
+    this.gameWidth  = width  | canvases[i].width ;
+    this.gameHeight = height | canvases[i].height;
+    this.visibleRect = new Rect(0, 0, this.gameWidth, this.gameHeight);
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# background color
