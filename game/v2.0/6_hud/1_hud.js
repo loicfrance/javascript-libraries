@@ -33,9 +33,8 @@ Game.hud.Hud = (function(){
     return this.context2d;
   };
   Hud.prototype.render = function( context2d, canvasRect ) {
-    this.views.forEach(function( v ) {
-      v.render(context2d, canvasRect);
-    });
+    var len=this.views.length, i=0;
+    while(i<len)this.views[i++].render(context2d, canvasRect);
   };
   Hud.prototype.mouseButton = function( btn, pressed ) {
     return !isNull(currentView) && currentView.onTouchEvent({

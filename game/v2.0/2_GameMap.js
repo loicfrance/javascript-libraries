@@ -162,7 +162,7 @@ Game.Map = (function(){
   GameMap.LAYER_OBJ3 = 5;
   GameMap.LAYER_PARTCILES = 6;
   GameMap.prototype.getContextForLayer = function(layer, contextsNumber) {
-    return this.contexts[layer>contextsNumber? contextsNumber : layer];
+    return this.contexts[layer>=contextsNumber? contextsNumber-1 : layer];
   };
   GameMap.prototype.render = function ( gameManager, objects ) {
     var rect = this.getVisibleRect();
