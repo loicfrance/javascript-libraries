@@ -37,7 +37,7 @@ Game.hud.Hud = (function(){
     while(i<len)this.views[i++].render(context2d, canvasRect);
   };
   Hud.prototype.mouseButton = function( btn, pressed ) {
-    return !isNull(currentView) && currentView.onTouchEvent({
+    return !isNull(this.currentView) && this.currentView.onTouchEvent({
         position : position,
         description : pressed? Game.hud.views.EVENT_DESC.DOWN : Game.hud.views.EVENT_DESC.UP,
         button : btn
@@ -49,20 +49,20 @@ Game.hud.Hud = (function(){
     
     for(var i=this.views.length-1; i>=0; i--) {
       view = this.views[i];
-      if(done && view != currentView) continue;
+      if(done && view != this.currentView) continue;
       if(view.state & Game.hud.views.STATE.INACTIVE) continue;
       rect = view.getRect();
       evt.position.set(position).add(-rect.left, -rect.top);
-      if(done && view == currentView) { currentView.onTouchEvent(evt); break; }
+      if(done && view == this.currentView) { this.currentView.onTouchEvent(evt); break; }
       if(view.onTouchEvent(evt)) {
-        if(isNull(currentView)) { currentView = view; break; }
+        if(isNull(this.currentView)) { this.currentView = view; break; }
         done = true; evt.description = Game.hud.views.EVENT_DESC.EXIT;
       }
     }
   };
   Hud.prototype.click = function( position, btn ) {
     console.log('onClick');
-    return !isNull(currentView) && currentView.onTouchEvent({
+    return !isNull(this.currentView) && this.currentView.onTouchEvent({
         position : position,
         description : Game.hud.views.EVENT_DESC.CLICK,
         button : btn
