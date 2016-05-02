@@ -184,10 +184,14 @@ Game.Map = (function(){
      */
     var l=-1;
     var ctxLen = this.contexts.length;
+    var lastCtx = null;
     while(l++<=6) {
       ctx = this.getContextForLayer(l, ctxLen);
       ctx.save();
-      ctx.clearRect(0, 0, rect.width(), rect.height());
+      if(ctx != lastCtx) {
+        ctx.clearRect(0, 0, rect.width(), rect.height());
+        lastCtx = ctx;
+      }
       objs = objects.filter(GameObject.renderLayerFilter.bind(undefined, l));
       var i=objs.length;
       if(i>0)while(i--) if(!objs[i].isOutOfMap(rect)) {
@@ -196,11 +200,12 @@ Game.Map = (function(){
       }
       ctx.restore();
     }
-    if(!this.getHud().getContext()) {
+/*    if(!this.getHud().getContext()) {
       ctx.save();
       this.getHud().render(ctx, rect.width(), rect.height());
       ctx.restore();
     }
+*/
     this.showMouseOverInfos(gameManager, objects, ctx);
   };
   GameMap.prototype.getObjectAt = function( objects, point ) {
@@ -226,11 +231,11 @@ Game.Map = (function(){
     return "";
   };
   GameMap.prototype.showMouseOverInfos = function( gameManager, objects, ctx ) {
+    if(!ctx) ctx = this.contexts[this.contexts.length-1];
     if(!isNull(this.pointerPos)) {
       var nearest = this.getObjectAt(objects, this.pointerPos);
       if(!isNull(nearest))
-        nearest.renderMouseOver(ctx? ctx : this.contexts[this.contexts.length-1],
-            this.pointerPos, gameManager, this.debug);
+        nearest.renderMouseOver(ctx, this.pointerPos, gameManager, this.debug);
     }
   };
   return GameMap;
