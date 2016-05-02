@@ -15,12 +15,15 @@ Game.hud.views = {
 };
 
 Game.hud.views.View = (function(){
-  var View = function() {
+  var View = function(parentView) {
+    this.parentView = parentView;
     this.state = Game.hud.views.STATE.INACTIVE;
   };
   View.prototype.render = function( context2d, canvasRect ) {};
   View.prototype.getState = function() { return this.state; };
   View.prototype.setState = function( state ) { this.state = state; };
+  View.prototype.getParentView = function() { return this.parentView; };
+  View.prototype.setParentView=function(parentView){this.parentView=parentView;};
   View.prototype.onRectUpdate = function( rect ) {};
   View.prototype.getPosition = function() { return new Vec2(Vec2.ZERO); };
   View.prototype.containsPoint = function( point ) { return false; };
@@ -54,6 +57,10 @@ Game.hud.views.View = (function(){
       default: break;
     }
   };
+  View.update = function() {
+    var parent = this.getParentView();
+    if(!isNull(parent)) parent.updateRect(parent.getChildRect(this));
+  };
   View.prototype.isOvered = function() {
     return (this.state & Game.hud.views.STATE.OVERED) !== 0;
   };
@@ -68,7 +75,8 @@ Game.hud.views.View = (function(){
 })();
 Game.hud.views.TextView = (function(){
   var parent = Game.hud.views.View;
-  var TextView = function( text, rect, color ) {
+  var TextView = function(parentView, text, rect, color ) {
+    parent.call(this, parentView);
     this.setText(text);
     if(!isNull(rect))this.setRect(rect);
     this.setFontSize(12);
@@ -109,9 +117,9 @@ Game.hud.views.TextView = (function(){
 })();
 Game.hud.views.Button = (function(){
   var parent = Game.hud.views.TextView;
-  var Button = function( shape, shapeColor, text, textColor ) {
+  var Button = function(parentView, shape, shapeColor, text, textColor ) {
     if(isNull(textColor)) textColor = 'black';
-    parent.call(this, text, undefined, textColor);
+    parent.call(this, parentView, text, undefined, textColor);
     this.setShape(shape);
     this.setShapeColor(shapeColor);
     this.stroke = true;
@@ -155,8 +163,8 @@ Game.hud.views.Button = (function(){
 })();
 Game.hud.views.ProgressBar = (function(){
   var parent = Game.hud.views.View;
-  var ProgressBar = function( width, height, max, value ) {
-    parent.call(this);
+  var ProgressBar = function(parentView, width, height, max, value ) {
+    parent.call(this, parentView);
     this.needStrokeUpdate = true;
     this.needFillUpdate = true;
     this.setWidth(width);
@@ -278,8 +286,8 @@ Game.hud.views.ProgressBar = (function(){
 })();
 Game.hud.views.SegmentedProgressBar = (function(){
   var parent = Game.hud.views.ProgressBar;
-  var SPB = function( width, height, max, value, segments, inclination ) {
-    parent.call(this, width, height, max, value);
+  var SPB = function(parentView, width, height, max, value, segments, inclination ) {
+    parent.call(this, parentView, width, height, max, value);
     this.setSegments(segments);
     this.setInclination(inclination);
   };

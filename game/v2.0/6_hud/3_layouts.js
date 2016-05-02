@@ -24,6 +24,9 @@ Game.hud.views.Layout = (function(){
       return currentView.onTouchEvent(evt);
     }
   };
+  Layout.prototype.updateRect = function(rect) {
+    this.getParentView().updateRect(rect);
+  };
   Layout.mouseMove = function(evt){
     var rect, view, done=false, i=this.views.length;
     while(i--) {

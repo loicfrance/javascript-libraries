@@ -3,7 +3,7 @@ Game.Physics = (function(){
     G:6.67384E-11,
     friction: 2,
     Mass: {
-      applyOnClass: function ( objectClass, defaultMass ) {
+      applyOnClass: ( objectClass, defaultMass )=> {
         objectClass.prototype.mass = exists(defaultMass)? defaultMass : 0;
         objectClass.prototype.setMass = function( mass ) { this.mass = mass; };
         objectClass.prototype.getMass = function() { return this.mass; };
@@ -13,7 +13,7 @@ Game.Physics = (function(){
           this.setAcceleration(da);
         };
       },
-      applyOnObject: function( object, mass ) {
+      applyOnObject: ( object, mass )=> {
         object.setMass = function( mass ) { this.mass = mass; };
         object.getMass = function() { return this.mass; };
         object.applyForce = function( force ) {
@@ -22,7 +22,7 @@ Game.Physics = (function(){
           this.setAcceleration(da);
         };
       },
-      hasMass: function( obj ) { return exists(obj.getMass); },
+      hasMass: ( obj )=> exists(obj.getMass),
       elasticCollision: function( obj1, obj2 ) { // not perfect at all.
         var m1 = this.hasMass(obj1)? obj1.getMass() : 1,
             m2 = this.hasMass(obj2)? obj2.getMass() : 1,
@@ -35,17 +35,17 @@ Game.Physics = (function(){
         console.log(k);
       }
     },
-    applyForce: function( object, force ) {
+    applyForce: ( object, force )=> {
       object.setAcceleration(object.getAcceleration().add(force));
     },
-    applyGravity: function( object , direction ) {
+    applyGravity: ( object , direction )=> {
       Physics.applyForce(object, new Vec2(direction).mul(9.81));
     },
-    applyFriction: function( object ) {
+    applyFriction: ( object )=> {
       if(object.speed)
         Physics.applyForce(object, new Vec2(object.speed).mul(friction));
     },
-    applySpaceGravity: function( receiver, emitor ) {
+    applySpaceGravity: ( receiver, emitor )=> {
       var M = emitor.mass | 1, m = receiver.mass | 1;
       var d = Vec2.translation(receiver, emitor);
       var f = (Physics.G*M*m)/d.squareMagnitude();

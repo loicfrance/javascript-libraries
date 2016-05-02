@@ -76,9 +76,7 @@ Game.Map = (function(){
           this.contexts[i].canvas.style.marginTop = mTop.toString() + "px";
           this.contexts[i].transform(scaleX, 0, 0, scaleY, 0, 0);
         }
-        var hud = this.getHud();
-        if(!isNull(hud)) {
-          var c = hud.getContext();
+        if(!isNull(hud=this.getHud()) && !isNull(c=hud.getContext())) {
           c.width = w;
           c.height = h;
           c.canvas.style.marginLeft= mLeft.toString() + "px";
@@ -199,7 +197,9 @@ Game.Map = (function(){
       ctx.restore();
     }
     if(!this.getHud().getContext()) {
+      ctx.save();
       this.getHud().render(ctx, rect.width(), rect.height());
+      ctx.restore();
     }
     this.showMouseOverInfos(gameManager, objects, ctx);
   };

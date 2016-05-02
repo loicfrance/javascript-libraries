@@ -24,7 +24,10 @@ Game.hud.Hud = (function(){
     requestAnimationFrame(this.render.bind(this, this.context2d,
         rect ? rect :
                new Rect(0, 0, this.context2d.canvas.width,
-                              this.context2d.canvas.height())));
+                              this.context2d.canvas.height)));
+  };
+  Hud.prototype.getChildRect = function(view) {
+    return view.getRect();
   };
   Hud.prototype.getContext = function() {
     return this.context2d;
