@@ -3,7 +3,7 @@ Game.Map = (function(){
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# Constructor
   var GameMap = function( canvases, width, height) {
-    if(!exists(canvases.length)) canvases = [canvas];
+    if(!exists(canvases.length)) canvases = [canvases];
     var i = canvases.length;
     this.contexts = new Array(i);
     if(i===0)
@@ -163,6 +163,9 @@ Game.Map = (function(){
   GameMap.LAYER_PARTCILES = 6;
   GameMap.prototype.getContextForLayer = function(layer, contextsNumber) {
     return this.contexts[layer>=contextsNumber? contextsNumber-1 : layer];
+  };
+  GameMap.prototype.getTopLayer = function() {
+    return this.contexts[this.contexts.length-1];
   };
   GameMap.prototype.render = function ( gameManager, objects ) {
     var rect = this.getVisibleRect();
