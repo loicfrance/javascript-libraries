@@ -61,28 +61,12 @@ Game.Map = (function(){
       console.log("register resize listener");
       var ratio = this.getVisibleRect().ratio();
       this.onWindowResize = function(full, event) {
-        var w = window.innerWidth-borderMargin;
-        var h = Math.min(window.innerHeight-borderMargin, w/ratio);
+        var w = document.body.innerWidth-borderMargin;
+        var h = Math.min(document.body.innerHeight-borderMargin, w/ratio);
         w = h*ratio;
         var mLeft = (window.innerWidth-w)/2;
         var mTop = (window.innerHeight-h)/2;
-        var i=this.contexts.length;
-        var scaleX = w/this.visibleRect.width(),
-            scaleY = h/this.visibleRect.height();
-        while(i--) {
-          this.contexts[i].canvas.width = w;
-          this.contexts[i].canvas.height = h;
-          this.contexts[i].canvas.style.marginLeft= mLeft.toString() + "px";
-          this.contexts[i].canvas.style.marginTop = mTop.toString() + "px";
-          this.contexts[i].transform(scaleX, 0, 0, scaleY, 0, 0);
-        }
-        if(!isNull(hud=this.getHud()) && !isNull(c=hud.getContext())) {
-          c.width = w;
-          c.height = h;
-          c.canvas.style.marginLeft= mLeft.toString() + "px";
-          c.canvas.style.marginTop = mTop.toString() + "px";
-          c.transform(scaleX, 0, 0, scaleY, 0, 0);
-        }
+        this.setSize(w, h, mLeft, mTop);
       };
       window.addEventListener('resize',
           this.onWindowResize.bind(this, false), false);
@@ -90,6 +74,25 @@ Game.Map = (function(){
           this.onWindowResize.bind(this, true), false);
       
       this.onWindowResize();
+    }
+  };
+  GameMap.prototype.setSize = function(width, height, marginH, marginV) {
+    var scaleX = width/this.visibleRect.width(),
+        scaleY = height/this.visibleRect.height();
+    var i=this.contexts.length;
+    while(i--) {
+      this.contexts[i].canvas.width = width;
+      this.contexts[i].canvas.height = height;
+      this.contexts[i].canvas.style.marginLeft= marginH.toString() + "px";
+      this.contexts[i].canvas.style.marginTop = marginV.toString() + "px";
+      this.contexts[i].transform(scaleX, 0, 0, scaleY, 0, 0);
+    }
+    if(!isNull(hud=this.getHud()) && !isNull(c=hud.getContext())) {
+      c.width = width;
+      c.height = height;
+      c.canvas.style.marginLeft= marginH.toString() + "px";
+      c.canvas.style.marginTop = marginV.toString() + "px";
+      c.transform(scaleX, 0, 0, scaleY, 0, 0);
     }
   };
   //______________________________________________________________________________
@@ -164,7 +167,7 @@ Game.Map = (function(){
   GameMap.prototype.getContextForLayer = function(layer, contextsNumber) {
     return this.contexts[layer>=contextsNumber? contextsNumber-1 : layer];
   };
-  GameMap.prototype.getTopLayer = function() {
+  GameMap.prototype.getTopLayerContext = function() {
     return this.contexts[this.contexts.length-1];
   };
   GameMap.prototype.render = function ( gameManager, objects ) {
