@@ -129,11 +129,11 @@ Game.objects.Object = (function(){
     delete this.collision;
   };
   GameObject.prototype.collides = function( object ) {
-    if(!isNull(this.collision.position) && !isNull(object.collision.position)) {
-      return this.collision.collider.collides(
-          this.collision.position, object.collision.position,
-          object.collision.collider);
-    } else return false;
+    return this.collision.position && object.collision.position &&
+          this.collision.collider.collides(
+              this.collision.position,
+              object.collision.position,
+              object.position.collider);
   };
   GameObject.prototype.onCollision = function( gameManager, otherObject ) { };
   GameObject.COLLISION_LAYER = 0;
@@ -143,19 +143,21 @@ Game.objects.Object = (function(){
     return this.getCollisionLayers().indexOf(layer) >= 0;
   };
   GameObject.getCollisionLayerFilter = (layers, use) =>{
-    if(exists(layers.length)) {
-      var last = layers.length-1;
-      return obj=>{var i=last;
-        if(i>0)while(i--)if(obj.getCollisionLayers().indexOf(layers[i])>= 0)return use;
-        return !use;
-      };
+    var layersLength = layers.length;
+    if(exists(layersLength)) {
+      if(layersLength > 0) {
+        return obj=>{var i=layersLength;
+          while(i--)if(obj.getCollisionLayers().indexOf(layers[i])>= 0)return use;
+          return !use;
+        };
+      } else return obj=>!use;
     } else {
       return use? obj=> obj.getCollisionLayers().indexOf(layers) >= 0 :
                   obj=> obj.getCollisionLayers().indexOf(layers) == -1;
     }
   };
   GameObject.collisionFilter = GameObject.getCollisionLayerFilter(-1, false);
-  
+
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# rect, radius, circle
   GameObject.prototype.getRect = function() {
@@ -289,7 +291,7 @@ Game.objects.Object = (function(){
   GameObject.prototype.toString = function() {
     return ['object at', this.getPosition()].join(" ");
   };
-  
+
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# alternative constructors
   GameObject.Static = function( position ) {
@@ -297,13 +299,13 @@ Game.objects.Object = (function(){
     this.setPosition(position? position : Vec2.ZERO);
   };
   classExtend(GameObject, GameObject.Static);
-  
+
   GameObject.Cinetic = function( position ) {
     GameObject.Static.call(this, position);
     this.setSpeed(Vec2.ZERO);
   };
   classExtend(GameObject.Static, GameObject.Cinetic);
-  
+
   GameObject.Dynamic = function( position ) {
     GameObject.Cinetic.call(this, position);
     this.setAcceleration(Vec2.ZERO);

@@ -24,16 +24,16 @@ Game.Manager = (function(){
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# objects array functions (getObjects, addObject, removeObject)
   GameManager.prototype.getObjects = function( filter ) {
-    if(exists(filter)) return this.objects.active.filter(filter);
+    if(filter) return this.objects.active.filter(filter);
     else return this.objects.active;
   };
   var instanceFilter = function( objClass, obj ){
     return obj instanceof objClass;
   };
   GameManager.prototype.getInstancesOf = function( objectClass ) {
-    if(exists(objectClass))
-      return this.getObjects(instanceFilter.bind(undefined, objectClass));
-    else return this.getObjects();
+    return objectClass?
+              this.getObjects(instanceFilter.bind(undefined, objectClass)) :
+              this.getObjects();
   };
   GameManager.prototype.addObject = function( gameObject ) {
     if(this.objects.toAdd.indexOf(gameObject == -1))
@@ -110,7 +110,7 @@ Game.Manager = (function(){
           active.splice(index, 1);
         }
       }
-      
+
       var dT = (timeStamp - this.now)/1000;
       if(dT === 0) console.log('error : dT=0');
       this.now = timeStamp;
@@ -147,11 +147,11 @@ Game.Manager = (function(){
     if(this.gameMap) {
       this.gameMap.render(this, this.objects.active);
     }
-    
+
     requestAnimationFrame(this.onFrame.bind(this));
   };
   GameManager.prototype.showContextMenu = function( menuDiv ) {
-    
+
     var innerHtml = ""; //open
     /* main context menu */
     innerHtml += this.gameMap.getContextMenu();
