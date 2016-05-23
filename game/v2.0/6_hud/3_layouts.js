@@ -69,11 +69,11 @@ Game.hud.views.Layout = (function(){
     return this.children[index];
   };
   Layout.prototype.getChildPosition = function(view/*| index*/) {
-    return isNaN(view)? view.getPosition :
+    return typeof view != TYPE_NUMBER ? view.getPosition :
                         this.getChildPosition(this.getChild(view));
   };
   Layout.prototype.getChildRect = function(view) {
-    return isNaN(view)? view.getRect() : this.getChild(view).getRect();
+    return typeof view != TYPE_NUMBER ? view.getRect() : this.getChild(view).getRect();
   };
   return Layout;
 });
@@ -84,13 +84,13 @@ Game.hud.views.LinearLayout = (function() {
     this.rtl = rtl;
   };
   var getChildPosition = override(LinearLayout, 'getPosition',function(index){
-    if(isNaN(index)) index = this.getIndexOf(index);
+    if(typeof index != TYPE_NUMBER) index = this.getIndexOf(index);
     var result = new Vec2(this.getChild(index).getPosition()).add();
     if(index>0) result.add(0,this.getChildRect(index-1).bottom);
     return result;
   });
   var getChildRect = override(LinearLayout, 'getRect', function(index){
-    if(isNaN(index)) index = this.getIndexOf(index);
+    if(typeof index != TYPE_NUMBER) index = this.getIndexOf(index);
     var result = getChildAt(index).getRect();
     if(index>0) {
       var previous = this.getChildRect(index-1);

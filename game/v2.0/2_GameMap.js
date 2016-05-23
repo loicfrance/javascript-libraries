@@ -47,22 +47,30 @@ Game.Map = (function(){
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# fullWindow
   GameMap.prototype.useFullWindow = function(use, borderMargin) {
-    if(!exists(use)) use = true;
-    else if(!isNaN(use)) borderMargin = use; use = true;
+    console.log('margin : ' + borderMargin);
+    if(!exists(use)) { use = true; borderMargin = 0; }
+    else if(typeof use == TYPE_NUMBER) { 
+      console.log('margin : ' + borderMargin);
+      borderMargin = use; use = true;
+    }
+    console.log('margin : ' + borderMargin);
     if(this.onWindowResize) {
       window.removeEventListener('resize',
-          this.onWindowResize.bind(this), false);
+          this.onWindowResize.bind(this, false), false);
       document.removeEventListener('fullscreenchange',
-          this.onWindowResize.bind(this), false);
+          this.onWindowResize.bind(this, true), false);
     }
+    console.log('margin : ' + borderMargin);
     if(use) {
-      if(isNaN(borderMargin)) bordermargin = 0;
+      if(typeof borderMargin != TYPE_NUMBER) borderMargin = 0;
       document.body.style.margin = 0;
       console.log("register resize listener");
       var ratio = this.getVisibleRect().ratio();
+      console.log('margin : ' + borderMargin);
       this.onWindowResize = function(full, event) {
-        var w = document.body.innerWidth-borderMargin;
-        var h = Math.min(document.body.innerHeight-borderMargin, w/ratio);
+        var w = window.innerWidth-borderMargin;
+        console.log('margin : ' + borderMargin);
+        var h = Math.min(window.innerHeight-borderMargin, w/ratio);
         w = h*ratio;
         var mLeft = (window.innerWidth-w)/2;
         var mTop = (window.innerHeight-h)/2;
@@ -80,7 +88,7 @@ Game.Map = (function(){
     var scaleX = width/this.visibleRect.width(),
         scaleY = height/this.visibleRect.height();
     var i=this.contexts.length;
-    while(i--) {
+    if(i>0) while(i--) {
       this.contexts[i].canvas.width = width;
       this.contexts[i].canvas.height = height;
       this.contexts[i].canvas.style.marginLeft= marginH.toString() + "px";
@@ -182,16 +190,17 @@ Game.Map = (function(){
      * 4 : objects 2 (eg: enemies, player);
      * 5 : objects 3 (eg: bullets);
      * 6 : particles.
-     *    Feel free to add or remove any layer. for example,
+     *  
+     * Feel free to add or remove any layer. For example,
      * to disable the particles, don't render the 6th layer.
      * If you want to put things above the 6th layer, modify
-     * the code below to enable the 7th layer or use the hud
+     * the code below to enable the 7th layer or use the hud.
      * Be aware that too many layers can slow down the game.
      */
     var l=-1;
     var ctxLen = this.contexts.length;
     var lastCtx = null;
-    while(l++<=6) {
+    while(l++<6) {
       ctx = this.getContextForLayer(l, ctxLen);
       ctx.save();
       if(ctx != lastCtx) {
@@ -206,12 +215,12 @@ Game.Map = (function(){
       }
       ctx.restore();
     }
-/*    if(!this.getHud().getContext()) {
+    if(!this.getHud().getContext()) {
       ctx.save();
       this.getHud().render(ctx, rect.width(), rect.height());
       ctx.restore();
     }
-*/
+
     this.showMouseOverInfos(gameManager, objects, ctx);
   };
   GameMap.prototype.getObjectAt = function( objects, point ) {

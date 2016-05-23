@@ -35,3 +35,9 @@ if(!window['getStringFromUrl']) window['getStringFromUrl']= ( url, listener )=> 
   client.onreadystatechange=_=>listener(client.responseText);
   client.send();
 };
+window['TYPE_UNDEFINED'] = 'undefined';
+window['TYPE_OBJECT'   ] = 'object';
+window['TYPE_BOOLEAN'  ] = 'boolean';
+window['TYPE_NUMBER'   ] = 'number';
+window['TYPE_STRING'   ] = 'string';
+window['TYPE_FUNCTION' ] = 'function';

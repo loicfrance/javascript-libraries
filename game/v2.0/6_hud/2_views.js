@@ -197,11 +197,10 @@ Game.hud.views.ProgressBar = (function(){
       top = canvasRect.top + this.getMarginY();
     }
     else top = canvasRect.top + (canvasRect.height() - h)/2;
-    if(isNaN(left)) left = right-w;
-    else if(isNaN(right)) right = left+w;
-    if(isNaN(top)) top = bottom-h;
-    else if(isNaN(bottom)) bottom = top+h;
-    
+         if(typeof left   != TYPE_NUMBER) left = right-w;
+    else if(typeof right  != TYPE_NUMBER) right = left+w;
+         if(typeof top    != TYPE_NUMBER) top = bottom-h;
+    else if(typeof bottom != TYPE_NUMBER) bottom = top+h;
     return (new Rect(left, top, right, bottom)).getShape();
   };
   ProgressBar.prototype.setGravity = function( gravity ) {
@@ -244,8 +243,8 @@ Game.hud.views.ProgressBar = (function(){
   };
   ProgressBar.prototype.getValue = function() { return this.value; };
   ProgressBar.prototype.setMargins = function( x, y ) {
-    if(!isNaN(x)) this.marginX = x;
-    if(!isNaN(y)) this.marginY = y;
+    if(typeof x == TYPE_NUMBER) this.marginX = x;
+    if(typeof y == TYPE_NUMBER) this.marginY = y;
     this.needStrokeUpdate = this.needFillUpdate = true;
   };
   ProgressBar.prototype.getMarginX = function() { return this.marginX; };

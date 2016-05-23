@@ -24,16 +24,16 @@ Game.Manager = (function(){
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# objects array functions (getObjects, addObject, removeObject)
   GameManager.prototype.getObjects = function( filter ) {
-    if(exists(filter)) return this.objects.active.filter(filter);
+    if(filter) return this.objects.active.filter(filter);
     else return this.objects.active;
   };
   var instanceFilter = function( objClass, obj ){
     return obj instanceof objClass;
   };
   GameManager.prototype.getInstancesOf = function( objectClass ) {
-    if(exists(objectClass))
-      return this.getObjects(instanceFilter.bind(undefined, objectClass));
-    else return this.getObjects();
+    return objectClass?
+              this.getObjects(instanceFilter.bind(undefined, objectClass)) :
+              this.getObjects();
   };
   GameManager.prototype.addObject = function( gameObject ) {
     if(this.objects.toAdd.indexOf(gameObject == -1))
@@ -101,7 +101,7 @@ Game.Manager = (function(){
       var active   = this.objects.active,
           toAdd    = this.objects.toAdd,
           toRemove = this.objects.toRemove;
-      i=toRemove.length;
+      var i=toRemove.length;
       if(i>0)while(i--) {
         obj = toRemove.pop();
         obj.onDeath(this);
@@ -110,29 +110,31 @@ Game.Manager = (function(){
           active.splice(index, 1);
         }
       }
-      
+
       var dT = (timeStamp - this.now)/1000;
       if(dT === 0) console.log('error : dT=0');
       this.now = timeStamp;
       if(dT !== 0 && dT < 0.5) {
-        var i, j, len;
+        var j, len;
         var bodies = active.filter(Game.objects.Object.collisionFilter);
         var other = [];
-        i=len= bodies.length;
-        if(i>0)while(i--) bodies[i].prepareCollision();
-        i=len;
-        if(i>0)while(i--) {
-          obj = bodies.pop();
-          other = bodies.filter(Game.objects.Object.getCollisionLayerFilter(
-                                              obj.getCollisionLayers(), true));
-          j = other.length;
-          if(j>0)while(j--) {
-            if(obj !== other[j] && obj.canCollide(other[j]) && other[j].canCollide(obj)
-                && obj.collides(other[j])) {
-              obj.onCollision(this, other[j]);
-              other[j].onCollision(this, obj);
-          } }
-          obj.finishCollision();
+        len= i = bodies.length;
+        if(len>0){
+          while(i--) bodies[i].prepareCollision();
+          i=len;
+          while(i--) {
+            obj = bodies.pop();
+            other = bodies.filter(Game.objects.Object.getCollisionLayerFilter(
+                                                obj.getCollisionLayers(), true));
+            j = other.length;
+            if(j>0)while(j--) {
+              if(obj !== other[j] && obj.canCollide(other[j]) && other[j].canCollide(obj)
+                  && obj.collides(other[j])) {
+                obj.onCollision(this, other[j]);
+                other[j].onCollision(this, obj);
+            } }
+            obj.finishCollision();
+          }
         }
         i = toAdd.length;
         if(i>0)while(i--) active.push(toAdd.pop());
@@ -147,11 +149,11 @@ Game.Manager = (function(){
     if(this.gameMap) {
       this.gameMap.render(this, this.objects.active);
     }
-    
+
     requestAnimationFrame(this.onFrame.bind(this));
   };
   GameManager.prototype.showContextMenu = function( menuDiv ) {
-    
+
     var innerHtml = ""; //open
     /* main context menu */
     innerHtml += this.gameMap.getContextMenu();
