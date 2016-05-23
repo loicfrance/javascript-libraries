@@ -47,29 +47,23 @@ Game.Map = (function(){
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# fullWindow
   GameMap.prototype.useFullWindow = function(use, borderMargin) {
-    console.log('margin : ' + borderMargin);
     if(!exists(use)) { use = true; borderMargin = 0; }
     else if(typeof use == TYPE_NUMBER) { 
-      console.log('margin : ' + borderMargin);
       borderMargin = use; use = true;
     }
-    console.log('margin : ' + borderMargin);
     if(this.onWindowResize) {
       window.removeEventListener('resize',
           this.onWindowResize.bind(this, false), false);
       document.removeEventListener('fullscreenchange',
           this.onWindowResize.bind(this, true), false);
     }
-    console.log('margin : ' + borderMargin);
     if(use) {
       if(typeof borderMargin != TYPE_NUMBER) borderMargin = 0;
       document.body.style.margin = 0;
       console.log("register resize listener");
       var ratio = this.getVisibleRect().ratio();
-      console.log('margin : ' + borderMargin);
       this.onWindowResize = function(full, event) {
         var w = window.innerWidth-borderMargin;
-        console.log('margin : ' + borderMargin);
         var h = Math.min(window.innerHeight-borderMargin, w/ratio);
         w = h*ratio;
         var mLeft = (window.innerWidth-w)/2;
