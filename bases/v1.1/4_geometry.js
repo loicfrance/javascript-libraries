@@ -24,6 +24,7 @@ Vec2.prototype.add = function(/* x, y | vec2*/) {
   switch(arguments.length) {
     case 1 : this.x += arguments[0].x; this.y += arguments[0].y; break;
     case 2 : this.x += arguments[0]; this.y += arguments[1]; break;
+    default : break;
   }
   return this;
 };
@@ -54,12 +55,9 @@ Vec2.prototype.rotateAround = function( center, radians) {
 Vec2.prototype.toString = function() {
   return '(' + this.x + ', ' + this.y + ')';
 };
-Vec2.prototype.equals = function() {
-  switch(arguments.length) {
-    case 1 : return this.x === arguments[0].x && this.y === arguments[0].y;
-    case 2 : return this.x === arguments[0] && this.y === arguments[1];
-    default : return false;
-  }
+Vec2.prototype.equals = function( x, y ) {
+  return y === undefined ? this.x === x.x && this.y === x.y :
+                           this.x === x && this.y === y;
 };
 Vec2.prototype.isZero = function() {return !(this.x||this.y);};
 Vec2.prototype.getUnit = function() { return new Vec2(this).normalize(); };
@@ -80,12 +78,12 @@ Vec2.prototype.getVerticalMirror = function( axisY ) {
 };
 Vec2.prototype.normalize = function() { return this.mul(1/this.magnitude()); };
 Vec2.prototype.roundedX = function( digits ) {
-  if(!isNaN(digits)) return this.x.toPrecision(digits);
-  else return this.x.round();
+  if(digits) return this.x.toPrecision(digits);
+  else return Math.round(this.x);
 };
 Vec2.prototype.roundedY = function( digits ) {
-  if(!isNaN(digits)) return this.y.toPrecision(digits);
-  else return this.y.round();
+  if(digits) return this.y.toPrecision(digits);
+  else return Math.round(this.y);
 };
 Vec2.prototype.roundedVec = function( digits ) {
   return new Vec2(this.roundedX(digits), this.roundedY(digits));
@@ -114,13 +112,12 @@ Vec2.ZERO = new Vec2();
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - -Rect (not a shape) - - - - - - - - - - - - - - -
 //******************************************************************************
-var Rect = function(/* left, top, right, bottom*/) {
-  switch(arguments.length) {
-    case 4 :
+var Rect = function(left, top, right, bottom) {
+  if(bottom !== undefined) {
       this.left = arguments[0]; this.top = arguments[1];
       this.right = arguments[2]; this.bottom = arguments[3];
-      break;
-    default : this.left = this.top = this.right = this.bottom = 0; break;
+  } else {
+    this.left = this.top = this.right = this.bottom = 0;
   }
 };
 Rect.prototype.center = function() {
@@ -130,73 +127,27 @@ Rect.prototype.overlap = function( rect ) {
   return rect.left <= this.right && rect.top <= this.bottom
       && rect.right >= this.left && rect.bottom >= this.top;
 };
-Rect.prototype.contains = function(/* Vec2 | x, y | Rect*/) {
-  switch(arguments.length) {
-    case 2 :
-      return arguments[0] >= this.left && arguments[0] <= this.right
-          && arguments[1] >= this.top && arguments[1] <= this.bottom;
-    case 1 :
-      if(arguments[0] instanceof Vec2)
-        return this.contains(arguments[0].x, arguments[0].y);
-      else if(arguments[0] instanceof Rect) {
-        return arguments[0].left > this.left && arguments[0].right < this.right
-            && arguments[0].top > this.top && arguments[0].bottom < this.bottom;
-      } else return false;
-      break;
-    default : return false;
-  }
+Rect.prototype.contains = function( x, y /* | Vec2 | Rect*/) {
+  return  (y !== undefined) ?
+                x >= this.left && x <= this.right
+                && y >= this.top && y <= this.bottom :
+          (x.x !== undefined) ?
+                this.contains(x.x, x.y) :
+          (x instanceof Rect)
+                && x.left > this.left && x.right < this.right
+                && x.top > this.top && x.bottom < this.bottom;
 };
-Rect.prototype.onLeftOf = function( /* rect | x, y | vec2*/ ) {
-  switch(arguments.length) {
-    case 1 :
-      var arg = arguments[0];
-      if     (arg instanceof Rect) return this.right < arg.left;
-      else if(arg instanceof Vec2) return this.right < arg.x;
-      break;
-    case 2 : return this.right < arguments[0];
-    default : 
-      console.log('error : illegal arguments :' + arguments);
-      return false;
-  }
+Rect.prototype.onLeftOf = function( x, y /* |  rect | vec2*/ ) {
+  return this.right < (y===undefined)? (x instanceof Rect)? x.left : x.x : x;
 };
-Rect.prototype.onRightOf = function( /* rect | x, y | vec2*/ ) {
-  switch(arguments.length) {
-    case 1 :
-      var arg = arguments[0];
-      if     (arg instanceof Rect) return this.left > arg.right;
-      else if(arg instanceof Vec2) return this.left > arg.x;
-      break;
-    case 2 :return this.left > arguments[0];
-    default : 
-      console.log('error : illegal arguments :' + arguments);
-      return false;
-  }
+Rect.prototype.onRightOf = function( x, y /* | rect | vec2*/ ) {
+  return this.left > (y===undefined)? (x instanceof Rect)? x.right : x.x : x;
 };
-Rect.prototype.above = function( /* rect | x, y | vec2*/ ) {
-  switch(arguments.length) {
-    case 1 :
-      var arg = arguments[0];
-      if     (arg instanceof Rect) return this.bottom < arg.top;
-      else if(arg instanceof Vec2) return this.bottom < arg.y;
-      break;
-    case 2 :return this.bottom < arguments[0];
-    default : 
-      console.log('error : illegal arguments :' + arguments);
-      return false;
-  }
+Rect.prototype.above = function( x, y /* | rect | vec2*/ ) {
+  return this.bottom < (y===undefined)? (x instanceof Rect)? x.top : x.y : y;
 };
 Rect.prototype.below = function( /* rect | x, y | vec2*/ ) {
-  switch(arguments.length) {
-    case 1 :
-      var arg = arguments[0];
-      if     (arg instanceof Rect) return this.top > arg.top;
-      else if(arg instanceof Vec2) return this.top > arg.y;
-      break;
-    case 2 :return this.top > arguments[0];
-    default : 
-      console.log('error : illegal arguments :' + arguments);
-      return false;
-  }
+  return this.top > (y===undefined)? (x instanceof Rect)? x.bottom : x.y : y;
 };
 Rect.prototype.addMargin = function( margin/* | marginX*/, marginY ) {
   this.left -= margin; this.right += margin;
@@ -214,21 +165,27 @@ Rect.prototype.draw = function( context, fill, stroke ) {
   if(fill) context.fill();
   if(stroke) context.stroke();
 };
-Rect.prototype.set = function(/* left, top, right, bottom | rect */) {
-  if(arguments.length == 1)
-    this.set(arguments[0].left, arguments[0].top,
-            arguments[0].right, arguments[0].bottom);
-  else this.left = arguments[0]; this.top = arguments[1];
-      this.right = arguments[2]; this.bottom = arguments[3];
+Rect.prototype.set = function(left, top, right, bottom /* | rect */) {
+  if (bottom !== undefined) {
+    this.top = top;
+    this.left = left;
+    this.right = right;
+    this.bottom = bottom;
+  } else {
+    this.top = left.top;
+    this.left = left.left;
+    this.right = left.right;
+    this.bottom = left.bottom;
+  }
   return this;
 };
-Rect.prototype.move = function(/* delta | x, y */) {
-  switch(arguments.length) {
-    case 1 : this.move(arguments[0].x, arguments[0].y); break;
-    case 2 : 
-      this.left += arguments[0]; this.right += arguments[0];
-      this.top += arguments[1]; this.bottom += arguments[1];
-      break;
+Rect.prototype.move = function( x, y /* | delta*/) {
+  if(y !== undefined) {
+    this.left += x; this.right += x;
+    this.top += y; this.bottom += y;
+  } else {
+    this.left += x.x; this.right += x.x;
+    this.top += x.y; this.bottom += x.y;
   }
   return this;
 };
@@ -291,18 +248,12 @@ Shape.prototype.clone     = function() { return new Shape(this.center); };
 Shape.prototype.getCircle = function() {
   return new Circle(this.center, this.getRadius());
 };
-Shape.prototype.move = function( /* delta | dx, dy */ ) {
-  switch(arguments.length) {
-    case 1 : this.center.add(arguments[0]); break;
-    case 2 : this.center.add(arguments[0], arguments[1]); break;
-  }
+Shape.prototype.move = function( /* dx, dy | delta */ ) {
+  this.center.add.apply(this.center, arguments);
   return this;
 };
 Shape.prototype.moveTo = function( /* pos | x, y */ ) {
-  switch(arguments.length) {
-    case 1 : this.center.set(arguments[0]); break;
-    case 2 : this.center.set(arguments[0], arguments[1]); break;
-  }
+  this.center.set.apply(this.center, arguments);
   return this;
 };
 Shape.prototype.draw = function( context, fill, stroke ) {

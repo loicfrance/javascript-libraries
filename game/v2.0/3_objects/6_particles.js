@@ -70,7 +70,7 @@ Game.objects.particles = (function(){
       this.reduceSizeFactor = 1.2;
       this.emitDistance = 0;
       if(max) this.max = max;
-      this.particleGenerator = function(lifeTime, initialPosition){
+      this.particleGenerator = function(lifeTime, initialPosition, angle, speed){
         return new particles.Particle(lifeTime,
             new Circle(initialPosition, 5),
             "#"+Math.round(Math.random()*16777215).toString(16)); // = OxFFFFFF
@@ -151,15 +151,16 @@ Game.objects.particles = (function(){
         if(i>0)while(i--) {
           var lifeTime = Math.random()*(this.maxLifeTime-this.minLifeTime)
                                                               + this.minLifeTime;
-          var p = this.particleGenerator(lifeTime, this.position);
           var speed = Math.round(Math.random()*(this.maxSpeed-this.minSpeed)
-                                                               + this.minSpeed); 
+                                                               + this.minSpeed);
+          var p;
           if(speed > 0) {
             var angle=Math.random()*(this.maxAngle-this.minAngle)+this.minAngle;
+            p = this.particleGenerator(lifeTime, this.position, angle, speed);
             if(this.emitDistance)
               p.move(Vec2.createFromRadians(angle).mul(this.emitDistance));
             p.speed = new Vec2(Math.cos(angle)*speed, Math.sin(angle)*speed);
-          }
+          } else p = this.particleGenerator(lifeTime, this.position, 0, 0);
           this.emitedParticles.push(p);
           gameManager.addObject(p);
         }

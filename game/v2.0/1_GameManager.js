@@ -14,8 +14,8 @@ Game.Manager = (function(){
   GameManager.prototype.setMap = function( gameMap ) {
     this.gameMap = gameMap;
   };
-  GameManager.prototype.createMap = function( canvas, gameWidth, gameHeight, bgColor ) {
-    this.gameMap = new Game.Map( canvas, gameWidth, gameHeight );
+  GameManager.prototype.createMap = function( canvases, gameWidth, gameHeight, bgColor ) {
+    this.gameMap = new Game.Map( canvases, gameWidth, gameHeight );
     this.gameMap.setBgColor(exists(bgColor)? bgColor : '#000');
   };
   GameManager.prototype.getMap = function() {
@@ -80,6 +80,17 @@ Game.Manager = (function(){
    * - onObjectDestroyed( gameManager, object ) :
    *      you can use this function  - in the 'onDeath' function, for example -
    *      to tell the game that this object has been killed.
+   * - onRenderStart( gameManager, context ) :
+   *      called by the GameMap everytime the render process start.
+   *      You can use this function, for example, to render something
+   *      behind the game, or to add some visual effects by modifying
+   *      the context (shake or tilt the screen, zoom in or out on something, ...)
+   *      the context is saved before this function is called.
+   * - onRenderEnd( gameManager, context ) :
+   *      called by the GameMap everytime the render process is finished.
+   *      You can use this function, for example, to render something above
+   *      the game, but behind the hud.
+   *      the context is restored after this function is called.
    */
   GameManager.prototype.setGameEventsListener = function( gameEventsListener ) {
     this.gameEventsListener = gameEventsListener;

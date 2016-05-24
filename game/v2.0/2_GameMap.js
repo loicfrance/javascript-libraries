@@ -2,31 +2,21 @@ Game.Map = (function(){
     
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# Constructor
-  var GameMap = function( canvases, width, height) {
-    if(!exists(canvases.length)) canvases = [canvases];
-    var i = canvases.length;
-    this.contexts = new Array(i);
-    if(i===0)
-    console.exception('at least one canvas must be attached to the GameMap');
-    while(i-->0) {
-      this.contexts[i] = canvases[i].getContext('2d');
-      this.contexts[i].font = "20px Verdana";
-    }
-    this.gameWidth  = width  | canvases[0].width ;
-    this.gameHeight = height | canvases[0].height;
+  var GameMap = function( canvas, width, height) {
+    this.context = canvas.getContext('2d');
+    this.context.font = "20px Verdana";
+    this.gameWidth  = width  | canvas.width ;
+    this.gameHeight = height | canvas.height;
     this.visibleRect = new Rect(0, 0, this.gameWidth, this.gameHeight);
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# background color
   GameMap.prototype.setBgColor = function( color ) {
-    var i=this.contexts.length;
-    this.contexts[0].canvas.style.background = color;
-    while(i--) {
-      this.contexts[i].canvas.style.background = '#00000000';
-    }
+    this.context.canvas.style.background = color;
+    
   };
   GameMap.prototype.getBg = function() {
-    return this.contexts[0].canvas.style.background;
+    return this.context.canvas.style.background;
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# pointer position
@@ -81,14 +71,11 @@ Game.Map = (function(){
   GameMap.prototype.setSize = function(width, height, marginH, marginV) {
     var scaleX = width/this.visibleRect.width(),
         scaleY = height/this.visibleRect.height();
-    var i=this.contexts.length;
-    if(i>0) while(i--) {
-      this.contexts[i].canvas.width = width;
-      this.contexts[i].canvas.height = height;
-      this.contexts[i].canvas.style.marginLeft= marginH.toString() + "px";
-      this.contexts[i].canvas.style.marginTop = marginV.toString() + "px";
-      this.contexts[i].transform(scaleX, 0, 0, scaleY, 0, 0);
-    }
+    this.context.canvas.width = width;
+    this.context.canvas.height = height;
+    this.context.canvas.style.marginLeft= marginH.toString() + "px";
+    this.context.canvas.style.marginTop = marginV.toString() + "px";
+    this.context.transform(scaleX, 0, 0, scaleY, 0, 0);
     if(!isNull(hud=this.getHud()) && !isNull(c=hud.getContext())) {
       c.width = width;
       c.height = height;
@@ -104,8 +91,7 @@ Game.Map = (function(){
     var gameWidth = rect.width(), gameHeight = rect.height();
     var scaleX = gameWidth ? this.contexts[0].canvas.width/gameWidth : 1,
         scaleY = gameHeight ? this.contexts[0].canvas.height/gameHeight : 1;
-        var i=this.contexts.length;
-    while(i--) this.contexts[i].transform(scaleX, 0, 0, scaleY, 0, 0);
+    this.context.transform(scaleX, 0, 0, scaleY, 0, 0);
   };
   GameMap.prototype.getVisibleRect = function() {
     return this.visibleRect;
@@ -133,10 +119,10 @@ Game.Map = (function(){
     return out.set((gameCoords.x-startX)*scale, (gameCoords.y-startY));
   };
   GameMap.prototype.getGamePixelScaleX = function() {
-    return this.getVisibleRect().width()/this.contexts[0].canvas.width;
+    return this.getVisibleRect().width()/this.context.canvas.width;
   };
   GameMap.prototype.getGamePixelScaleY = function() {
-    return this.getVisibleRect().height()/this.contexts[0].canvas.height;
+    return this.getVisibleRect().height()/this.context.canvas.height;
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# hud
@@ -166,11 +152,8 @@ Game.Map = (function(){
   GameMap.LAYER_OBJ2 = 4;
   GameMap.LAYER_OBJ3 = 5;
   GameMap.LAYER_PARTCILES = 6;
-  GameMap.prototype.getContextForLayer = function(layer, contextsNumber) {
-    return this.contexts[layer>=contextsNumber? contextsNumber-1 : layer];
-  };
-  GameMap.prototype.getTopLayerContext = function() {
-    return this.contexts[this.contexts.length-1];
+  GameMap.prototype.getContext = function() {
+    return this.context;
   };
   GameMap.prototype.render = function ( gameManager, objects ) {
     var rect = this.getVisibleRect();
@@ -192,15 +175,14 @@ Game.Map = (function(){
      * Be aware that too many layers can slow down the game.
      */
     var l=-1;
-    var ctxLen = this.contexts.length;
-    var lastCtx = null;
+    ctx = this.context;
+    ctx.clearRect(0, 0, rect.width(), rect.height());
+    var gameEvtsListener = gameManager.getGameEventsListener();
+    if(gameEvtsListener && gameEvtsListener.renderStart) {
+      gameEvtsListener.renderStart(gameManager, ctx);
+    }
     while(l++<6) {
-      ctx = this.getContextForLayer(l, ctxLen);
       ctx.save();
-      if(ctx != lastCtx) {
-        ctx.clearRect(0, 0, rect.width(), rect.height());
-        lastCtx = ctx;
-      }
       objs = objects.filter(GameObject.renderLayerFilter.bind(undefined, l));
       var i=objs.length;
       if(i>0)while(i--) if(!objs[i].isOutOfMap(rect)) {
@@ -214,8 +196,10 @@ Game.Map = (function(){
       this.getHud().render(ctx, rect.width(), rect.height());
       ctx.restore();
     }
-
     this.showMouseOverInfos(gameManager, objects, ctx);
+    if(gameEvtsListener && gameEvtsListener.renderEnd) {
+      gameEvtsListener.renderEnd(gameManager, ctx);
+    }
   };
   GameMap.prototype.getObjectAt = function( objects, point ) {
     var nearest = null;
@@ -227,8 +211,8 @@ Game.Map = (function(){
       if(!isNull(obj.renderMouseOver))
       pos = obj.getPosition();
       if(!isNull(pos)) {
-        dist = Vec2.distance(pos, this.pointerPos);
-        if(dist < minDist && obj.getRenderRect().contains(this.pointerPos)) {
+        dist = Vec2.distance(pos, point);
+        if(dist < minDist && obj.getRenderRect().contains(point)) {
           nearest = obj;
           minDist = dist;
         }
@@ -240,7 +224,7 @@ Game.Map = (function(){
     return "";
   };
   GameMap.prototype.showMouseOverInfos = function( gameManager, objects, ctx ) {
-    if(!ctx) ctx = this.contexts[this.contexts.length-1];
+    if(!ctx) ctx = this.context;
     if(!isNull(this.pointerPos)) {
       var nearest = this.getObjectAt(objects, this.pointerPos);
       if(!isNull(nearest))
