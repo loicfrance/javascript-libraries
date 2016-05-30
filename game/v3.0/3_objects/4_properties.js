@@ -103,7 +103,7 @@ Game.objects.properties.Homing = {
     var onFrame = override(objectClass, 'onFrame', function( gameManager, dT ) {
       if(this.getTarget) {
         var target = this.getTarget(gameManager);
-        if(!isNull(target)) {
+        if(target) {
           if(target instanceof Game.objects.Object) target = target.getPosition();
           var pos = this.getPosition();
           var trans = Vec2.translation(pos, target);
@@ -130,7 +130,7 @@ Game.objects.properties.Homing = {
     else objectClass.prototype.getMaxSpeed = distance => 200;
     if(!isNull(steerForce))
          objectClass.prototype.getSteerForce = (maxSpeed,distance)=> steerForce;
-    else objectClass.prototype.getSteerForce = (maxSpeed,disatnce)=> 100;
+    else objectClass.prototype.getSteerForce = (maxSpeed,distance)=> 100;
   },
   applyOnObject: ( object, maxSpeed, steerForce, getTarget ) =>{
     var onFrame = object.onFrame;
@@ -162,11 +162,11 @@ Game.objects.properties.LifeTime = {
   applyOnClass: function( objectClass ) {
     var onFrame = objectClass.prototype.onFrame;
     objectClass.prototype.onFrame = function( gameManager, dT ) {
-      if(exists(this.lifeTime) && this.lifeTime <= 0){
+      if(this.lifeTime <= 0){
         this.kill(gameManager);
       }
       onFrame.call(this, gameManager, dT);
-      if(exists(this.lifeTime)) this.lifeTime -= dT;
+      if(this.lifeTime) this.lifeTime -= dT;
     };
     var getInformations = override(objectClass, 'getInformations', function() {
       if(!isNull(this.lifeTime)){
@@ -184,7 +184,7 @@ Game.objects.properties.LifeTime = {
   applyOnObject: object => {
     var onFrame = object.onFrame;
     object.onFrame = function( gameManager, dT ) {
-      if(exists(this.lifeTime) && this.lifeTime <= 0){
+      if(this.lifeTime <= 0){
         this.kill(gameManager);
       }
       onFrame.apply(this, arguments);

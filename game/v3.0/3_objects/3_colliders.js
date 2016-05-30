@@ -11,15 +11,14 @@ Game.objects.colliders = (function(){
     Collider.prototype.collidesWhenInside = function( collider ) {
       return false;
     };
-    Collider.prototype.prepareCollision = function(position) {
-      this.collision = {
-        rect: this.getRect(position),
-      };
+    Collider.prototype.prepareCollision = function(collisionObject) {
+      if(collisionObject.rect) collisionObject.rect.setRect(this.getRect(collisionObject.position));
+      else collisionObject.rect = this.getRect(collisionObject.position);
     };
     Collider.prototype.finishCollision = function() {
-      delete this.collision;
+      //delete this.collision;
     };
-    Collider.prototype.collides = function( objPos, otherPos, collider ) {
+    Collider.prototype.collides = function( collisionObject, otherCollisionObject ) {
       return false;
     };
     return Collider;
@@ -45,15 +44,19 @@ Game.objects.colliders = (function(){
     ShapedCollider.prototype.setShape = function( shape ) {
       this.shape = shape.clone();
     };
-    ShapedCollider.prototype.collides = function( objPos, otherPos, collider ) {
-      return (!isNull(collider.shape) &&
-          collider.collision.rect.overlap(this.collision.rect) &&
-          this.shape.intersect(collider.shape) ||
-         (this.collidesWhenInside(collider) && collider.shape.contains(objPos))||
-         (collider.collidesWhenInside(this) && this.shape.contains(otherPos)));
+    ShapedCollider.prototype.collides = function( colObj, otherColObj ) {
+      
+      var col = otherColObj.collider;
+      
+      return (otherColObj.collider.shape &&
+          otherColObj.rect.overlap(colObj.rect) &&
+          this.shape.intersect(col.shape) ||
+         (this.collidesWhenInside(col) && col.shape.contains(colObj.position))||
+         (col.collidesWhenInside(this) && this.shape.contains(otherColObj.position)));
     };
     ShapedCollider.prototype.getRect = function( position ) {
-      if(position) this.shape.moveTo(position); return this.shape.getRect();
+      if(position) this.shape.moveTo(position);
+      return this.shape.getRect();
     };
     ShapedCollider.prototype.getRadius = function() {
       return this.shape.getRadius();

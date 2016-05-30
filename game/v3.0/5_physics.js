@@ -30,20 +30,20 @@ Game.Physics = (function(){
             pos2 = obj2.getPosition(), spd2 = obj2.getSpeed();
         var k = Vec2.translation(pos1, pos2)
                                         .mul(Vec2.distance(spd1, spd2)/(m1+m2));
-        obj1.setSpeed(new Vec2(k).mul(m2));
+        obj1.setSpeed(k.clone().mul(m2));
         obj2.setSpeed(k.mul(m1));
-        console.log(k);
       }
     },
     applyForce: ( object, force )=> {
       object.setAcceleration(object.getAcceleration().add(force));
     },
     applyGravity: ( object , direction )=> {
-      Physics.applyForce(object, new Vec2(direction).mul(9.81));
+      Physics.applyForce(object, direction.clone().mul(9.81));
     },
     applyFriction: ( object )=> {
-      if(object.speed)
-        Physics.applyForce(object, new Vec2(object.speed).mul(friction));
+      var spd = object.getSpeed();
+      if(spd && !spd.isZero())
+        Physics.applyForce(object, spd.clone().mul(friction));
     },
     applySpaceGravity: ( receiver, emitor )=> {
       var M = emitor.mass | 1, m = receiver.mass | 1;

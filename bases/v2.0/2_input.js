@@ -19,45 +19,56 @@ var KEY = {
   VERR_NUM:144,
   FN:255
 };
-var Input = new (function() {
-    this.KeyState = {UP:0, DOWN:1};
+var Input = {};
+(function(){
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - - - VARIABLES - - - - - - - - - - - - - - - - -
 //******************************************************************************
-    var keyboardInit = false;
-    var onKeyUp, onKeyDown;
-    var keyboardListeners;
-    var keyState = new Array(256);
-    for(var i=1; i< keyState.length; i++) {
-      keyState[i] = KEY.State.UP;
-    }
-    
+  var keyboardInit = false;
+  var onKeyUp, onKeyDown;
+  var keyboardListeners;
+  var keyState = new Array(256);
+  for(var i=1; i< keyState.length; i++) {
+    keyState[i] = KEY.State.UP;
+  }
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - PRIVATE FUNCTIONS - - - - - - - - - - - - - - -
 //******************************************************************************
-    var InitKeyboard = _ => {
-      keyboardInit = true;
-      keyboardListeners = [];
-      onKeyDown = function( event ) {
-        if(!keyState[event.keyCode]) {
-          keyState[event.keyCode] = true;
-          keyboardListeners.forEach(function( listener ) {
-            listener.onKeyDown(event.keyCode);
-          });
-        }
-      };
-      onKeyUp = function( event ) {
-        if(keyState[event.keyCode]) {
-          keyState[event.keyCode] = false;
-          keyboardListeners.forEach(function( listener ) {
-            listener.onKeyUp(event.keyCode);
-          });
-        }
-      };
-      document.addEventListener( 'keydown', onKeyDown, false );
-  		document.addEventListener( 'keyup', onKeyUp, false );
+  var InitKeyboard = _ => {
+    keyboardInit = true;
+    keyboardListeners = [];
+    onKeyDown = function( event ) {
+      if(!keyState[event.keyCode]) {
+        keyState[event.keyCode] = true;
+        keyboardListeners.forEach(function( listener ) {
+          listener.onKeyDown(event.keyCode);
+        });
+      }
     };
-    
+    onKeyUp = function( event ) {
+      if(keyState[event.keyCode]) {
+        keyState[event.keyCode] = false;
+        keyboardListeners.forEach(function( listener ) {
+          listener.onKeyUp(event.keyCode);
+        });
+      }
+    };
+    document.addEventListener( 'keydown', onKeyDown, false );
+		document.addEventListener( 'keyup', onKeyUp, false );
+  };
+  
+  var fixMouseWhich = event => {
+    if(!event.which && e.button) {
+      if(event.button & 1) event.which = 1; //left
+      if(event.button & 4) event.which = 2; //middle
+      if(event.button & 2) event.which = 3; //right
+    }
+  };
+  var getVec = ( element, event )=> new Vec2(event.pageX - element.offsetLeft,
+                                             event.pageY - element.offsetTop);
+                                               
+  Input.KeyState = { UP : 0, DOWN : 0 };
+  
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - PUBLIC FUNCTIONS- - - - - - - - - - - - - - - -
 //******************************************************************************
@@ -67,7 +78,7 @@ var Input = new (function() {
  * with the given keyCode.
  * Use removeKeyListener( listener ) to remove this listener from the keyListeners.
  */
-    this.addKeyListener = listener => {
+    Input.addKeyListener = listener => {
       if( !keyboardInit ) InitKeyboard();
       keyboardListeners.push( listener );
     };
@@ -75,14 +86,14 @@ var Input = new (function() {
  * @param listener {function( keyCode{integer}, down{boolean} )}
  * the function used with addKeyListener();
  */
-    this.removeKeyListener = listener => {
+    Input.removeKeyListener = listener => {
       if( keyboardInit ) keyboardListeners.remove( listener );
     };
-    this.getKeyState = function( keyCode ) {
+    Input.getKeyState = function( keyCode ) {
       return keyState[keyCode];
     };
     
-    this.addFocusListener = ( element, listener ) => {
+    Input.addFocusListener = ( element, listener ) => {
       element.onfocus = function() {
         listener(true);
       };
@@ -90,23 +101,14 @@ var Input = new (function() {
         listener(false);
       };
     };
-    this.removeFocusListener = element => {
+    Input.removeFocusListener = element => {
       delete element.onfocus;
       delete element.onblur;
     };
-    var fixMouseWhich = event => {
-      if(!event.which && e.button) {
-        if(event.button & 1) event.which = 1; //left
-        if(event.button & 4) event.which = 2; //middle
-        if(event.button & 2) event.which = 3; //right
-      }
-    };
-    var getVec = ( element, event )=> new Vec2(event.pageX - element.offsetLeft,
-                                               event.pageY - element.offsetTop);
 
-    this.MOUSE_UP = 0; this.MOUSE_DOWN = 1; this.MOUSE_CLICK = 2; this.MOUSE_DBCLICK = 3;
-    this.MOUSE_CONTEXT_MENU = 4;
-    this.addMouseBtnListener = function( element, listener ) {
+    Input.MOUSE_UP = 0; Input.MOUSE_DOWN = 1; Input.MOUSE_CLICK = 2; Input.MOUSE_DBCLICK = 3;
+    Input.MOUSE_CONTEXT_MENU = 4;
+    Input.addMouseBtnListener = function( element, listener ) {
       element.onclick = event=> { if(listener.onClick) {
         fixMouseWhich(event);
         listener.onClick(event.which, getVec(element, event));
@@ -128,13 +130,13 @@ var Input = new (function() {
         listener.onDoubleClick(event.which, getVec(element, event));
       } };
     };
-    this.removeMouseBtnListener = element => {
+    Input.removeMouseBtnListener = element => {
       delete element.onclick;
       delete element.onmousedown; delete element.onmouseup;
       delete element.onrightclick; delete element.ondbclick;
     };
-    this.MOUSE_EXIT = 5; this.MOUSE_ENTER = 6; this.MOUSE_MOVE = 7;
-    this.addMouseMoveListener = ( element, listener ) => {
+    Input.MOUSE_EXIT = 5; Input.MOUSE_ENTER = 6; Input.MOUSE_MOVE = 7;
+    Input.addMouseMoveListener = ( element, listener ) => {
       element.onmousemove = function( event ) { if(listener.onMouseMove)
         listener.onMouseMove(getVec(element, event)); };
       element.onmouseover = function( event ) { if(listener.onMouseEnter)
@@ -142,11 +144,11 @@ var Input = new (function() {
       element.onmouseout  = function( event ) { if(listener.onMouseExit)
         listener.onMouseExit(getVec(element, event)); };
     };
-    this.removeMouseMoveListener = element => {
+    Input.removeMouseMoveListener = element => {
       delete element.onmousemove;
       delete element.onmouseover; delete element.onmouseout;
     };
-    this.pointerLock = ( element, eventListener ) => {
+    Input.pointerLock = ( element, eventListener ) => {
       if(!isNull(eventListener)) {
         if(!isNull(eventListener.pointerLockChange)) {
           document.addEventListener('pointerlockchange', eventListener.pointerLockChange, false);
@@ -168,10 +170,10 @@ var Input = new (function() {
         elem.requestPointerLock();
       }
     };
-    this.fullScreen = ( element, eventListener ) => {
+    Input.fullScreen = ( element, eventListener ) => {
       elem.requestFullscreen = elem.requestFullscreen    ||
                            elem.mozRequestFullscreen ||
-                           elem.mozRequestFullScreen || // Le caractère 'S' majuscule de l'ancienne API. (note de traduction: ?)
+                           elem.mozRequestFullScreen || // Le caractère 'S' majuscule de l'ancienne API.
                            elem.webkitRequestFullscreen;
       elem.requestFullscreen();
       if(!isNull(eventListener) && !isNull(eventListener.fullScreenChange)) {

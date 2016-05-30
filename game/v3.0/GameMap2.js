@@ -2,27 +2,26 @@ Game.Map = (function(){
     
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# Constructor
-  var GameMap = function( canvas, width, height) {
-    this.context = canvas.getContext('2d');
-    this.context.font = "20px Verdana";
-    this.gameWidth  = width  | canvas.width ;
+  var GameMap = function( canvas , width, height) {
+    this.context2d = canvas.getContext('2d');
+    this.context2d.font="20px Verdana";
+    this.gameWidth = width | canvas.width;
     this.gameHeight = height | canvas.height;
-    this.visibleRect = new Rect(0, 0, this.gameWidth, this.gameHeight);
+    this.visibleRect = new Rect(0, 0, width, height);
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# background color
   GameMap.prototype.setBgColor = function( color ) {
-    this.context.canvas.style.background = color;
-    
+    this.context2d.canvas.style.background = color;
   };
   GameMap.prototype.getBg = function() {
-    return this.context.canvas.style.background;
+    return this.context2d.canvas.style.background;
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# pointer position
   GameMap.prototype.setPointerPosition = function(/*x, y | vec2*/) {
     switch(arguments.length) {
-      case 1 : this.pointerPos = new Vec2(arguments[0]); break;
+      case 1 : this.pointerPos = Vec2.copy(arguments[0]); break;
       case 2 : this.pointerPos = new Vec2(x, y); break;
     }
     var hud = this.getHud();
@@ -37,18 +36,16 @@ Game.Map = (function(){
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# fullWindow
   GameMap.prototype.useFullWindow = function(use, borderMargin) {
-    if(!exists(use)) { use = true; borderMargin = 0; }
-    else if(typeof use == TYPE_NUMBER) { 
-      borderMargin = use; use = true;
-    }
+    if(!exists(use)) use = true;
+    else if(!isNaN(use)) borderMargin = use; use = true;
     if(this.onWindowResize) {
       window.removeEventListener('resize',
-          this.onWindowResize.bind(this, false), false);
+          this.onWindowResize.bind(this), false);
       document.removeEventListener('fullscreenchange',
-          this.onWindowResize.bind(this, true), false);
+          this.onWindowResize.bind(this), false);
     }
     if(use) {
-      if(typeof borderMargin != TYPE_NUMBER) borderMargin = 0;
+      if(isNaN(borderMargin)) bordermargin = 0;
       document.body.style.margin = 0;
       console.log("register resize listener");
       var ratio = this.getVisibleRect().ratio();
@@ -58,7 +55,14 @@ Game.Map = (function(){
         w = h*ratio;
         var mLeft = (window.innerWidth-w)/2;
         var mTop = (window.innerHeight-h)/2;
-        this.setSize(w, h, mLeft, mTop);
+        
+        this.context2d.canvas.width = w;
+        this.context2d.canvas.height = h;
+        this.context2d.canvas.style.marginLeft= mLeft.toString() + "px";
+        this.context2d.canvas.style.marginTop = mTop.toString() + "px";
+        var scaleX = w/this.visibleRect.width(),
+            scaleY = h/this.visibleRect.height();
+        this.context2d.transform(scaleX, 0, 0, scaleY, 0, 0);
       };
       window.addEventListener('resize',
           this.onWindowResize.bind(this, false), false);
@@ -68,30 +72,14 @@ Game.Map = (function(){
       this.onWindowResize();
     }
   };
-  GameMap.prototype.setSize = function(width, height, marginH, marginV) {
-    var scaleX = width/this.visibleRect.width(),
-        scaleY = height/this.visibleRect.height();
-    this.context.canvas.width = width;
-    this.context.canvas.height = height;
-    this.context.canvas.style.marginLeft= marginH.toString() + "px";
-    this.context.canvas.style.marginTop = marginV.toString() + "px";
-    this.context.transform(scaleX, 0, 0, scaleY, 0, 0);
-    if(!isNull(hud=this.getHud()) && !isNull(c=hud.getContext())) {
-      c.width = width;
-      c.height = height;
-      c.canvas.style.marginLeft= marginH.toString() + "px";
-      c.canvas.style.marginTop = marginV.toString() + "px";
-      c.transform(scaleX, 0, 0, scaleY, 0, 0);
-    }
-  };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# visibleRect, gameRect
   GameMap.prototype.setVisibleRect = function( rect ) {
-    this.visibleRect.set(rect);
+    this.visibleRect.setRect(rect);
     var gameWidth = rect.width(), gameHeight = rect.height();
-    var scaleX = gameWidth ? this.contexts[0].canvas.width/gameWidth : 1,
-        scaleY = gameHeight ? this.contexts[0].canvas.height/gameHeight : 1;
-    this.context.transform(scaleX, 0, 0, scaleY, 0, 0);
+    var scaleX = gameWidth ? this.context2d.canvas.width/gameWidth : 1,
+        scaleY = gameHeight ? this.context2d.canvas.height/gameHeight : 1;
+    this.context2d.transform(scaleX, 0, 0, scaleY, 0, 0);
   };
   GameMap.prototype.getVisibleRect = function() {
     return this.visibleRect;
@@ -119,20 +107,21 @@ Game.Map = (function(){
     return out.set((gameCoords.x-startX)*scale, (gameCoords.y-startY));
   };
   GameMap.prototype.getGamePixelScaleX = function() {
-    return this.getVisibleRect().width()/this.context.canvas.width;
+    return this.getVisibleRect().width()/this.context2d.canvas.width;
   };
   GameMap.prototype.getGamePixelScaleY = function() {
-    return this.getVisibleRect().height()/this.context.canvas.height;
+    return this.getVisibleRect().height()/this.context2d.canvas.height;
   };
   //______________________________________________________________________________
   //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# hud
-  GameMap.prototype.setHud = function( hud ) {
-    this.hud = hud;
+  GameMap.prototype.addHudView = function( hudView ) {
+    if(isNull(this.hud)) this.hud = [];
+    this.hud.push(hudView);
   };
-  GameMap.prototype.createHud = function() {
-    this.hud = new Game.hud.Hud();
+  GameMap.prototype.removeHudView = function(hudView) {
+    this.hud.remove(hudView);
   };
-  GameMap.prototype.getHud = function() {
+  GameMap.prototype.getHudViews = function() {
     return this.hud;
   };
   //______________________________________________________________________________
@@ -152,67 +141,50 @@ Game.Map = (function(){
   GameMap.LAYER_OBJ2 = 4;
   GameMap.LAYER_OBJ3 = 5;
   GameMap.LAYER_PARTCILES = 6;
-  GameMap.prototype.getContext = function() {
-    return this.context;
-  };
   GameMap.prototype.render = function ( gameManager, objects ) {
+    var ctx = this.context2d;
+    ctx.save();
     var rect = this.getVisibleRect();
+    ctx.clearRect(0, 0, rect.width(), rect.height());
     var objs = [];
     /** layers use (example):
      * <0 : not rendered;
      * 0 : background 1 (eg: far background (mountains, sky, ...));
-     * 1 : background 2 (eg : mid-distance background (walls, buildings, ...));
+     * 1 : background 2 (eg: mid-distance background (walls, buildings, ...));
      * 2 : background 3 (eg: near background (room stuff, ...));
      * 3 : objects 1 (eg: obstacles, platforms);
      * 4 : objects 2 (eg: enemies, player);
      * 5 : objects 3 (eg: bullets);
      * 6 : particles.
-     *  
-     * Feel free to add or remove any layer. For example,
+     *    Feel free to add or remove any layer. for example,
      * to disable the particles, don't render the 6th layer.
      * If you want to put things above the 6th layer, modify
-     * the code below to enable the 7th layer or use the hud.
+     * the code below to enable the 7th layer or use hud views
      * Be aware that too many layers can slow down the game.
      */
-    var l=-1;
-    ctx = this.context;
-    ctx.clearRect(0, 0, rect.width(), rect.height());
-    var gameEvtsListener = gameManager.getGameEventsListener();
-    if(gameEvtsListener && gameEvtsListener.renderStart) {
-      gameEvtsListener.renderStart(gameManager, ctx);
-    }
-    while(l++<6) {
-      ctx.save();
+    for(var l=0; l<= 6; l++) {
       objs = objects.filter(GameObject.renderLayerFilter.bind(undefined, l));
-      var i=objs.length;
-      if(i>0)while(i--) if(!objs[i].isOutOfMap(rect)) {
+      for(var i=0; i< objs.length; i++)
+        if(!objs[i].isOutOfMap(rect)) {
           objs[i].render(ctx);
           if(this.debug) objs[i].renderDebug(ctx);
       }
-      ctx.restore();
     }
-    if(!this.getHud().getContext()) {
-      ctx.save();
-      this.getHud().render(ctx, rect.width(), rect.height());
-      ctx.restore();
-    }
-    this.showMouseOverInfos(gameManager, objects, ctx);
-    if(gameEvtsListener && gameEvtsListener.renderEnd) {
-      gameEvtsListener.renderEnd(gameManager, ctx);
-    }
+    ctx.restore();
+    this.showMouseOverInfos(gameManager, objects);
   };
   GameMap.prototype.getObjectAt = function( objects, point ) {
     var nearest = null;
     var minDist = Number.MAX_SAFE_INTEGER;
     var pos, dist;
-    var i = objects.length;
+    var len = objects.length;
     var obj;
-    if(i>0)while(i--) { obj = objects[i];
+    for(var i=0; i<len; i++) { obj = objects[i];
       if(!isNull(obj.renderMouseOver))
       pos = obj.getPosition();
       if(!isNull(pos)) {
-        dist = Vec2.distance(pos, point);
-        if(dist < minDist && obj.getRenderRect().contains(point)) {
+        dist = Vec2.distance(pos, this.pointerPos);
+        if(dist < minDist && obj.getRenderRect().contains(this.pointerPos)) {
           nearest = obj;
           minDist = dist;
         }
@@ -223,12 +195,11 @@ Game.Map = (function(){
   GameMap.prototype.getContextMenu = function() {
     return "";
   };
-  GameMap.prototype.showMouseOverInfos = function( gameManager, objects, ctx ) {
-    if(!ctx) ctx = this.context;
+  GameMap.prototype.showMouseOverInfos = function( gameManager, objects ) {
     if(!isNull(this.pointerPos)) {
       var nearest = this.getObjectAt(objects, this.pointerPos);
       if(!isNull(nearest))
-        nearest.renderMouseOver(ctx, this.pointerPos, gameManager, this.debug);
+        nearest.renderMouseOver(this.context2d, this.pointerPos, gameManager, this.debug);
     }
   };
   return GameMap;
