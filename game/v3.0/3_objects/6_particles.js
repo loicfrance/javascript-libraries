@@ -15,26 +15,26 @@ Game.objects.particles = (function(){
     Game.objects.properties.LifeTime.applyOnClass(Particle);
     var onFrame = override(Particle, 'onFrame', function( gameManager, dT ) {
       onFrame.call(this, gameManager, dT);
-      if(this.isOutOfMap(gameManager.gameMap.getVisibleRect()))
+      if(this.isOutOfMap(gameManager.getMap().getVisibleRect(), 0, 0))
         this.lifeTime = 0;
     });
     Particle.prototype.render = function( context2d ) {
       context2d.fillStyle = this.color;
-      this.shape.draw(context2d, true);
+      this.shape.draw(context2d, true, false);
     };
     Particle.prototype.getPosition = function() { return this.shape.center; };
-    Particle.prototype.copyPosition = function() { return new Vec2(this.shape.center); };
+    Particle.prototype.copyPosition = function() { return this.shape.center.clone(); };
     Particle.prototype.rotate = function( radians ) { this.shape.rotate(radians); };
     Particle.prototype.grow = function( factor) { this.shape.grow(factor); };
-    Particle.prototype.canCollide = function() { return false; };
-    Particle.prototype.collides = function() { return false; };
+    Particle.prototype.canCollide = function(obj) { return false; };
+    Particle.prototype.collides = function(obj) { return false; };
     Particle.prototype.getRenderLayer=function(){return Game.Map.LAYER_PARTCILES;};
     var colLayers = [-1];
     Particle.prototype.getCollisionLayers = function() {
       return colLayers;
     };
     Particle.prototype.prepareCollision = function() {
-      console.log('error');
+      console.stack('error : the method \'prepareCollision()\' should not be called for a particle.');
     };
     delete Particle.prototype.renderMouseOver;
     return Particle;
@@ -61,6 +61,7 @@ Game.objects.particles = (function(){
     var parent = Game.objects.Object.Static;
     var ParticleEmitor = function( rate, max ) {
       parent.call(this);
+      //TODO put all these attributes in prototype
       this.rate = rate;
       this.emited = 0;
       this.minLifeTime = 0.75; this.maxLifeTime = 1.5;
@@ -166,7 +167,7 @@ Game.objects.particles = (function(){
         }
       }
       if(this.particlePositionRelative && this.speed && !this.speed.isZero()) {
-        var d = new Vec2(this.speed).mul(dT);
+        var d = this.speed.clone().mul(dT);
         i=this.emitedParticles.length;
         if(i>0)while(i--) this.emitedParticles[i].shape.move(d);
       }
@@ -180,6 +181,7 @@ Game.objects.particles = (function(){
     var parent = particles.Emitor;
     var Explosion = function( number ) {
       parent.call(this, number*1000, number);
+      // TODO put all thes attributes in the prototype.
       this.minLifeTime = 0.1; this.maxLifeTime = 0.5;
       this.minSpeed = 500; this.maxSpeed = 1500;
       this.speedDampFactor = 2;

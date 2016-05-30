@@ -90,7 +90,8 @@ Game.Manager = (function(){
    *      called by the GameMap everytime the render process is finished.
    *      You can use this function, for example, to render something above
    *      the game, but behind the hud.
-   *      the context is restored after this function is called.
+   *      the context is restored (from his version before the onRenderStart call)
+   *      after this function is called.
    */
   GameManager.prototype.setGameEventsListener = function( gameEventsListener ) {
     this.gameEventsListener = gameEventsListener;
@@ -123,13 +124,16 @@ Game.Manager = (function(){
       }
 
       var dT = (timeStamp - this.now)/1000;
-      if(dT === 0) console.log('error : dT=0');
+      if(dT === 0) {
+        console.log('error : dT=0');
+        return;
+      }
       this.now = timeStamp;
       if(dT !== 0 && dT < 0.5) {
         var j, len;
         var bodies = active.filter(Game.objects.Object.collisionFilter);
         var other = [];
-        len= i = bodies.length;
+        len = i = bodies.length;
         if(len>0){
           while(i--) bodies[i].prepareCollision();
           i=len;

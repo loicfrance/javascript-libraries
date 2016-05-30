@@ -17,9 +17,10 @@ Game.objects.renderers = (function(){
     ShapedRenderer = function( shape, color ) {
       this.shape = shape.clone();
       this.color = color;
-      this.fill = true;
     };
     classExtend(parent, ShapedRenderer);
+    ShapedRenderer.prototype.fill = true;
+    ShapedRenderer.prototype.stroke = false;
     ShapedRenderer.prototype.rotate = function( radians ) {
       this.shape.rotate(radians);
     };

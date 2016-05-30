@@ -125,7 +125,7 @@ Game.weapons = (function(){
     Gun.createLaserBulletGenerator = ( color, width, range ) =>{
       var shape;
       if(exists(range)) {
-        shape = new Line(Vec2.ZERO, {x:range, y:0});
+        shape = new Line(Vec2.ZERO, new Vec2(range, 0));
       }
       else shape = new Ray(Vec2.ZERO, 0);
       return function( damages, position, radians ) {

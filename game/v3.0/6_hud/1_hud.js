@@ -7,6 +7,7 @@ Game.hud.Hud = (function(){
       this.context2d = canvas.getContext('2d');
       canvas.style.background = '#00000000';
     }
+    this.active = true; // set to false if you don't want to test mouse events on hud elements.
   };
   Hud.prototype.addView = function( view ) {
     this.views.push(view);
@@ -15,6 +16,8 @@ Game.hud.Hud = (function(){
     var index = this.views.indexOf(view);
     if(index >= 0) this.views.splice(index, 1);
   };
+  
+  
   Hud.prototype.onRectUpdate = function( rect ) {
     for(var i=0; i<view.length; i++) {
       v.onRectUpdate( rect );
@@ -44,24 +47,37 @@ Game.hud.Hud = (function(){
       });
   };
   Hud.prototype.mouseMove = function( position ) {
-    var rect, view, done=false,
-        evt= {description: Game.hud.views.EVENT_DESC.MOVE, position: new Vec2()};
-    
-    for(var i=this.views.length-1; i>=0; i--) {
-      view = this.views[i];
-      if(done && view != this.currentView) continue;
-      if(view.state & Game.hud.views.STATE.INACTIVE) continue;
-      rect = view.getRect();
-      evt.position.set(position).add(-rect.left, -rect.top);
-      if(done && view == this.currentView) { this.currentView.onTouchEvent(evt); break; }
-      if(view.onTouchEvent(evt)) {
-        if(isNull(this.currentView)) { this.currentView = view; break; }
-        done = true; evt.description = Game.hud.views.EVENT_DESC.EXIT;
+    if(this.active) {
+      var rect, view, done=false,
+          evt= {description: Game.hud.views.EVENT_DESC.MOVE, position: Vec2.zero()};
+      if(this.currentView) {
+        if(this.currentView.hasFocus()){
+          evt.position.set(position).addXY(-rect.left, -rect.top);
+          if(evt.onTouchEvent(evt)) return;
+          else this.currentView = null;
+        }
+        else this.currentView = null;
       }
+      var i=this.views.length;
+      var topView;
+      if(i>0) while(i--) {
+        view = this.views[i];
+        if(view.state & Game.hud.views.STATE.INACTIVE) continue;
+        rect = view.getRect();
+        if(view == this.currentView || rect.contains(position)) {
+          evt.position.set(position).addXY(-rect.left, -rect.top);
+          if(!topView && (view != this.currentView || rect.contains(position)))
+            topView = view;
+          if(view.onTouchEvent(evt)) {
+            evt.description = Game.hud.views.EVENT_DESC.EXIT;
+            if(this.currentView) this.currentView.onTouchEvent(evt);
+            this.currentView = view;
+            break;
+      } } }
+      if(!this.currentView && topView) this.currentView = topView;
     }
   };
   Hud.prototype.click = function( position, btn ) {
-    console.log('onClick');
     return !isNull(this.currentView) && this.currentView.onTouchEvent({
         position : position,
         description : Game.hud.views.EVENT_DESC.CLICK,

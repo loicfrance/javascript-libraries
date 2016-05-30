@@ -17,8 +17,8 @@ Game.hud.views = {
 Game.hud.views.View = (function(){
   var View = function(parentView) {
     this.parentView = parentView;
-    this.state = Game.hud.views.STATE.INACTIVE;
   };
+  View.prototype.state = Game.hud.views.STATE.INACTIVE;
   View.prototype.render = function( context2d, canvasRect ) {};
   View.prototype.getState = function() { return this.state; };
   View.prototype.setState = function( state ) { this.state = state; };
@@ -30,7 +30,10 @@ Game.hud.views.View = (function(){
   View.prototype.getRect = function() {
     return Rect.createFromPoint(this.getPosition());
   };
-  View.prototype.onClick = function( position, btn ) {return false;};
+  View.prototype.onClick = function( position, btn ) {
+    console.log('onClick');
+    return false;
+  };
   /**
    * @param event : {
    *    position : Vec2 in this view ref ( (0,0): left top of this view),
@@ -41,6 +44,7 @@ Game.hud.views.View = (function(){
    */
   var EVENTS = Game.hud.views.EVENT_DESC;
   View.prototype.onTouchEvent = function(event) {
+    console.log('touch event : ' + event.description);
     switch(event.description) {
       case EVENTS.DOWN :
         this.state |= views.STATE.PRESSED;
@@ -49,11 +53,11 @@ Game.hud.views.View = (function(){
         this.state &= views.STATE.OVERED;
         return false;
       case EVENTS.CLICK : return this.onClick(event.position, event.btn);
-      case EVENTS.MOVE : return isPressed();
+      case EVENTS.MOVE : return this.hasFocus();
       case EVENTS.ENTER :
-        this.state = views.STATE.OVERED; return false;
+        this.state = views.STATE.OVERED; return this.hasFocus();
       case EVENTS.EXIT :
-        this.state = views.STATE.NONE; return isPressed();
+        this.state = views.STATE.NONE; return this.hasFocus();
       default: break;
     }
   };
@@ -68,7 +72,7 @@ Game.hud.views.View = (function(){
     return (this.state & Game.hud.views.STATE.PRESSED) !== 0;
   };
   View.prototype.hasFocus = function() {
-    return this.isHovered() || this.isPressed();
+    return this.isPressed();
   };
   View.prototype.toString = function() { return 'hud.views.View'; };
   return View;
@@ -111,7 +115,7 @@ Game.hud.views.TextView = (function(){
     context2d.strokeStyle = this.getTextColor();
     var textSize = this.getFontSize();
     context2d.font = [textSize , 'px ', this.getFont()].concat(); 
-    context2d.wrapText(this.getText(), rect, this.getFontSize()*1.25, Gravity.CENTER);
+    context2d.wrapText(this.getText(), rect, textSize*1.25, Gravity.CENTER, false, true);
   };
   return TextView;
 })();
@@ -127,6 +131,7 @@ Game.hud.views.Button = (function(){
     this.setGravity(Gravity.LEFT | Gravity.TOP);
   };
   classExtend(parent, Button);
+  Button.prototype.state = Game.hud.views.STATE.ACTIVE;
   Button.prototype.setShape = function( shape ) { this.shape = shape.clone(); };
   Button.prototype.getShape = function() { return this.shape; };
   Button.prototype.getPosition = function() { return this.getShape().center; };
@@ -197,10 +202,10 @@ Game.hud.views.ProgressBar = (function(){
       top = canvasRect.top + this.getMarginY();
     }
     else top = canvasRect.top + (canvasRect.height() - h)/2;
-         if(typeof left   != TYPE_NUMBER) left = right-w;
-    else if(typeof right  != TYPE_NUMBER) right = left+w;
-         if(typeof top    != TYPE_NUMBER) top = bottom-h;
-    else if(typeof bottom != TYPE_NUMBER) bottom = top+h;
+         if(isNaN(left  )) left = right-w;
+    else if(isNaN(right )) right = left+w;
+         if(isNaN(top   )) top = bottom-h;
+    else if(isNaN(bottom)) bottom = top+h;
     return (new Rect(left, top, right, bottom)).getShape();
   };
   ProgressBar.prototype.setGravity = function( gravity ) {
@@ -302,7 +307,7 @@ Game.hud.views.SegmentedProgressBar = (function(){
   };
   SPB.prototype.getInclination = function() { return this.inclination; };
   SPB.prototype.createShape = function( isForStroke, canvasRect ) {
-    var h      = this.getHeight(), inclin = this.getInclination(),
+    var h = this.getHeight(), inclin = this.getInclination(),
         segs = this.getSegments(), w = this.getWidth()-inclin*h,
         segWdth = w/segs, dH = h/segs, dW = dH*inclin;
     var p = [new Vec2(inclin*h,0), new Vec2(0,h)];
@@ -329,7 +334,7 @@ Game.hud.views.SegmentedProgressBar = (function(){
           p.push(new Vec2(p[0].x+val/max*w, 0));
     } } }
     var result = new Polygon(p);
-    result.move(canvasRect.left + this.getMarginX(),
+    result.moveXY(canvasRect.left + this.getMarginX(),
                 canvasRect.top + this.getMarginY());
     var g = this.getGravity();
     if(g & Gravity.BOTTOM)

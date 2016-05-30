@@ -4,22 +4,27 @@ var Gravity = {
   RIGHT  : 4,
   BOTTOM : 8,
   CENTER : 16,
-  getRect: ( gravity, availableRect, width, height, margin /* | marginX*/, marginY )=> {
-    if(exists(margin)){
-      if(!exists(marginY)) marginY = margin;
-      availableRect = availableRect.clone().addMargin(-margin, -marginY);
+  getRect: ( gravity, availableRect, width, height, marginX, marginY )=> {
+    if(!exists(marginX)) {
+      console.deprecated('Gravity.getRect(g,r,w,h)');
+      marginX = marginY = 0;
     }
-    if((gravity & Gravity.CENTER)===0) {
-      if(gravity === 0) gravity = Gravity.LEFT | Gravity.TOP;
-      else {
-        if((gravity & Gravity.LEFT)===0 && (gravity & Gravity.RIGHT)===0)
+    else if(!exists(marginY)) {
+      console.deprecated('Gravity.getRect(g,r,w,h,m)');
+      marginY = marginX;
+    }
+    availableRect = availableRect.copy().addMarginsXY(-marginX, -marginY);
+    if(!(gravity & Gravity.CENTER)) {
+      if(gravity) {
+        if(!(gravity & Gravity.LEFT) && !(gravity & Gravity.RIGHT))
           gravity |= Gravity.LEFT;
-        if((gravity & Gravity.TOP)===0 && (gravity & Gravity.BOTTOM)===0)
+        if(!(gravity & Gravity.TOP) && (gravity & Gravity.BOTTOM))
           gravity |= Gravity.TOP;
       }
+      else gravity = Gravity.LEFT | Gravity.TOP;
     }
-    var left, top, right, bottom;
-    if(gravity & Gravity.CENTER  !== 0) {
+    var left=NaN, top=NaN, right=NaN, bottom=NaN;
+    if(gravity & Gravity.CENTER) {
       left   = availableRect.left   + (availableRect.width ()-width)/2;
       top    = availableRect.top    + (availableRect.height()-height)/2;
       right  = availableRect.right  - (availableRect.width ()-width)/2;
@@ -29,10 +34,10 @@ var Gravity = {
     if(gravity & Gravity.TOP    !== 0) top = availableRect.top;
     if(gravity & Gravity.RIGHT  !== 0) right = availableRect.right;
     if(gravity & Gravity.BOTTOM !== 0) bottom = availableRect.right;
-         if(!exists(left  )) left  = right - width ;
-    else if(!exists(right )) right = left  + width ;
-         if(!exists(top   )) top   = bottom- height;
-    else if(!exists(bottom)) bottom= top   + height;
+         if(isNaN(left  )) left   = right  - width ;
+    else if(isNaN(right )) right  = left   + width ;
+         if(isNaN(top   )) top    = bottom - height;
+    else if(isNaN(bottom)) bottom = top    + height;
     return new Rect(left, top, right, bottom);
   },
   getHorizontalGravity: function(g, defaultG) {
@@ -48,10 +53,10 @@ var Gravity = {
 };
 
 if(!CanvasRenderingContext2D.prototype.wrapText) {
-  CanvasRenderingContext2D.prototype.wrapText = function( text, rect, lineHeight, textGravity ) {
+  CanvasRenderingContext2D.prototype.wrapText = function( text, rect, lineHeight, textGravity, fill, stroke ) {
     var paragraphs = text.split('\n');
     var parLen = paragraphs.length;
-    var lines = [], line='';
+    var lines = [], line;
     var linesX = [], lineX=0;
     var words, len;
     var testLine;
@@ -60,6 +65,7 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
     var n;
     for(var i=0; i<parLen; i++) {
       words = paragraphs[i].split(' ');
+      line='';
       len = words.length;
       for(n = 0; n < len; n++) {
         testLine = line + words[n];
@@ -99,7 +105,8 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
       else y += (rect.height()-h)/2;
     }
     for(n=0; n<len; n++) {
-      this.strokeText(lines[n], linesX[n], y);
+      if(fill)   this.fillText  (lines[n], linesX[n], y);
+      if(stroke) this.strokeText(lines[n], linesX[n], y);
       y += lineHeight;
     }
   };

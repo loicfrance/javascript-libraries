@@ -4,33 +4,34 @@ Game.objects.Object = (function(){
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# onFrame
   GameObject.prototype.onFrame = function( gameManager, dT) {
-    if(this.moveOnFrame)       this.moveOnFrame       (gameManager, dT);
-    if(this.accelerateOnFrame) this.accelerateOnFrame (gameManager, dT);
-    if(this.rotateOnFrame)     this.rotateOnFrame     (gameManager, dT);
+    //TODO remove conditions
+    this.moveOnFrame       (gameManager, dT);
+    this.accelerateOnFrame (gameManager, dT);
+    this.rotateOnFrame     (gameManager, dT);
     if(this.mustKeepInRect())
         this.maintainInRect(gameManager.gameMap.getVisibleRect());
   };
   GameObject.prototype.moveOnFrame = function( gameManager, dT ) {
     var speed = this.getSpeed();
-    if(exists(speed) && !speed.isZero()) this.move(new Vec2(speed).mul(dT));
+    if(speed && !speed.isZero()) this.move(speed.clone().mul(dT));
   };
   GameObject.prototype.accelerateOnFrame = function( gameManager, dT ) {
     var accel = this.getAcceleration();
-    if(exists(accel) && !accel.isZero()) this.accelerate(new Vec2(accel).mul(dT));
+    if(accel && !accel.isZero()) this.accelerate(accel.clone().mul(dT));
   };
   GameObject.prototype.rotateOnFrame = function( gameManager, dT ) {
     var rotSpeed = this.getRotationSpeed();
-    if(exists(rotSpeed) && rotSpeed !== 0) this.rotate(rotSpeed*dT);
+    if(rotSpeed) this.rotate(rotSpeed*dT);
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# rotation
   GameObject.prototype.setRotationFieldEnabled = function( enable ) {
     if(enable && !this.radians) this.radians = 0;
-    else if(!enable && this.radians) delete this.radians;
+    else if(!enable && exists(this.radians)) delete this.radians;
     return this;
   };
   GameObject.prototype.rotate = function( radians ) {
-    if(exists(this.radians)) this.radians += radians;
+    if(exists(this.radians)) this.radians = (this.radians + radians)%(2*Math.PI);
     if(this.renderer) this.renderer.rotate(radians);
     if(this.collider) this.collider.rotate(radians);
     return this;
@@ -50,14 +51,14 @@ Game.objects.Object = (function(){
     return Vec2.createFromRadians(this.getRadians());
   };
   GameObject.prototype.lookAt = function( position ) {
-    if(!this.radians) this.setRotationFieldEnabled(true);
+    if(!exists(this.radians)) this.setRotationFieldEnabled(true);
     var trans = Vec2.translation(this.getPosition(), position);
     this.setRadians(trans.getAngle());
     return this;
   };
   GameObject.prototype.setRotationSpeed = function( rotationSpeed ) {
-    if(rotationSpeed ===0) { if(this.rotationSpeed) delete this.rotationSpeed; }
-    else this.rotationSpeed = rotationSpeed;
+    if(rotationSpeed) this.rotationSpeed = rotationSpeed;
+    else if(this.rotationSpeed) delete this.rotationSpeed;
     return this;
   };
   GameObject.prototype.getRotationSpeed = function() {
@@ -77,8 +78,7 @@ Game.objects.Object = (function(){
     return this.renderer;
   };
   GameObject.prototype.render = function( context2d ) {
-    if(this.renderer)
-      this.renderer.render(this.getPosition(), context2d);
+    if(this.renderer) this.renderer.render(this.getPosition(), context2d);
   };
   GameObject.prototype.renderDebug = function( context2d ) {
     if(this.collider) this.collider.render(this.getPosition(), context2d);
@@ -89,19 +89,21 @@ Game.objects.Object = (function(){
       context2d.fillStyle = '#fff';
       context2d.font ="15px Verdana";
       var infos = this.getInformations();
-      context2d.wrapText(infos.join('\n'), rect.right, rect.top, 200, 12);
+      rect.left = rect.right;
+      rect.right = gameManager.getMap().getVisibleRect().right;
+      context2d.wrapText(infos.join('\n'), rect, 15, Gravity.LEFT, true, false);
     }
     context2d.strokeStyle = "#fff";
     (new Circle(this.getPosition(), this.getRenderRadius()*1.1))
                                                   .draw(context2d, false, true);
   };
   GameObject.prototype.getInformations = function() {
-    var pos=this.getPosition(),speed=this.getSpeed(),
-        accel=this.getAcceleration();
+    var pos=this.getPosition(),spd=this.getSpeed(),
+        acc=this.getAcceleration();
     var result = [];
-    if(!isNull(pos)) result.push(["p :", pos.roundedVec(4)].join(" "));
-    if(!isNull(speed)) result.push(["s :", speed.roundedVec(4)].join(" "));
-    if(!isNull(accel)) result.push(["a :", accel.roundedVec(4)].join(" "));
+    if(pos) result.push(["p :", pos.roundedVec(4)].join(" "));
+    if(spd) result.push(["s :", spd.roundedVec(4)].join(" "));
+    if(acc) result.push(["a :", acc.roundedVec(4)].join(" "));
     return result;
   };
   GameObject.prototype.getContextMenu = function() {
@@ -123,19 +125,19 @@ Game.objects.Object = (function(){
     return !isNull(this.getCollider());
   };
   GameObject.prototype.prepareCollision = function() {
-    this.collision = {position:this.getPosition(), collider:this.getCollider()};
-    this.collision.collider.prepareCollision(this.collision.position);
+    if(!this.collision) this.collision = {};
+    this.collision.position = this.getPosition();
+    this.collision.collider = this.getCollider();
+    this.collision.collider.prepareCollision(this.collision);
   };
   GameObject.prototype.finishCollision = function() {
     this.collision.collider.finishCollision();
-    delete this.collision;
+    //delete this.collision;
   };
-  GameObject.prototype.collides = function( object ) {
-    return this.collision.position && object.collision.position &&
-          this.collision.collider.collides(
-              this.collision.position,
-              object.collision.position,
-              object.collision.collider);
+  GameObject.prototype.collides = function( obj ) {
+    return this.collision.position && obj.collision.position &&
+            this.collision.collider.collides(
+                this.collision, obj.collision);
   };
   GameObject.prototype.onCollision = function( gameManager, otherObject ) { };
   GameObject.COLLISION_LAYER = 0;
@@ -145,48 +147,50 @@ Game.objects.Object = (function(){
     return this.getCollisionLayers().indexOf(layer) >= 0;
   };
   GameObject.getCollisionLayerFilter = (layers, use) =>{
-    var layersLength = layers.length;
-    if(exists(layersLength)) {
-      if(layersLength > 0) {
-        return obj=>{var i=layersLength;
-          while(i--)if(obj.getCollisionLayers().indexOf(layers[i])>= 0)return use;
-          return !use;
-        };
-      } else return obj=>!use;
-    } else {
-      return use? obj=> obj.getCollisionLayers().indexOf(layers) >= 0 :
-                  obj=> obj.getCollisionLayers().indexOf(layers) == -1;
-    }
+    var len = layers.length;
+    return exists(len)?
+        len > 0 ?
+          use ?
+            obj =>{
+              var i=len, l = obj.getCollisionLayers();
+              while(i-- && l.indexOf(layers[i])==-1) {}
+              return i >= 0;
+            } :
+            obj =>{
+              var i=len, l = obj.getCollisionLayers();
+              while(i-- && l.indexOf(layers[i])==-1) {}
+              return i == -1;
+            } :
+          obj=>!use :
+        use?
+          obj=>obj.getCollisionLayers().indexOf(layers) >= 0 :
+          obj=>obj.getCollisionLayers().indexOf(layers) == -1;
   };
   GameObject.collisionFilter = GameObject.getCollisionLayerFilter(-1, false);
 
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# rect, radius, circle
   GameObject.prototype.getRect = function() {
-    return Rect.getUnion(this.getRenderRect(), this.getColliderRect());
+    return Rect.getUnion([this.getRenderRect(), this.getColliderRect()]);
   };
   GameObject.prototype.getColliderRect = function() {
     var c = this.getCollider();
-    if(c) return c.getRect(this.getPosition());
-    else return Rect.createFromPoint(this.getPosition());
+    return c? c.getRect(this.getPosition()) : Rect.createFromPoint(this.getPosition());
   };
   GameObject.prototype.getRenderRect = function() {
     var r = this.getRenderer();
-    if(r) return r.getRect(this.getPosition());
-    else return Rect.createFromPoint(this.getPosition());
+    return r? r.getRect(this.getPosition()) : Rect.createFromPoint(this.getPosition());
   };
   GameObject.prototype.getRadius = function() {
     return Math.max(this.getRenderRadius(), this.getColliderRadius());
   };
   GameObject.prototype.getRenderRadius = function() {
     var r = this.getRenderer();
-    if(r) return r.getRadius();
-    else return 0;
+    return r? r.getRadius() : 0;
   };
   GameObject.prototype.getColliderRadius = function() {
     var c = this.getCollider();
-    if(c) return c.getRadius();
-    else return 0;
+    return c? c.getRadius() : 0;
   };
   GameObject.prototype.getCircle = function() {
     return new Circle(this.getPosition(), this.getRadius());
@@ -203,45 +207,70 @@ Game.objects.Object = (function(){
   GameObject.prototype.getSpeed = function() { return this.speed; };
   GameObject.prototype.getAcceleration = function() { return this.accel; };
   GameObject.prototype.copyPosition = function() {
-    return new Vec2(this.getPosition());
+    return this.getPosition().clone();
   };
   GameObject.prototype.copySpeed = function() {
-    return new Vec2(this.getSpeed());
+    return this.getSpeed().clone();
   };
   GameObject.prototype.copyAcceleration = function() {
-    return new Vec2(this.getAcceleration());
+    return this.getAcceleration().clone();
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# position, speed, acceleration setters
-  GameObject.prototype.setPosition = function(/* x, y | vec2 */) {
+  GameObject.prototype.setPositionXY = function( x, y ) {
     var pos = this.getPosition();
-    if(pos) pos.set.apply(pos, arguments);
-    else this.position = arguments.length==1? new Vec2(arguments[0]) :
-                      new Vec2(arguments[0], arguments[1]);
+    if(pos) pos.setXY(x, y);
+    else this.position = new Vec2(x, y);
     return this;
   };
-  GameObject.prototype.setSpeed = function(/* x, y | vec2 */) {
+  GameObject.prototype.setPosition = function( p ) {
+    var pos = this.getPosition();
+    if(pos) pos.set(p);
+    else this.position = p.clone();
+    return this;
+  };
+  GameObject.prototype.setSpeedXY = function( x, y ) {
     var spd = this.getSpeed();
-    if(spd) spd.set.apply(spd, arguments);
-    else this.speed = arguments.length==1? new Vec2(arguments[0]) :
-                      new Vec2(arguments[0], arguments[1]);
+    if(spd) spd.setXY(x, y);
+    else this.speed = new Vec2(x, y);
     return this;
   };
-  GameObject.prototype.setAcceleration = function(/* x, y | vec2 */) {
+  GameObject.prototype.setSpeed = function( s ) {
+    var spd = this.getSpeed();
+    if(spd) spd.set(s);
+    else this.speed = s.clone();
+    return this;
+  };
+  GameObject.prototype.setAccelerationXY = function( x, y ) {
     var acc = this.getAcceleration();
-    if(acc) acc.set.apply(acc, arguments);
-    else this.accel = arguments.length==1? new Vec2(arguments[0]) :
-                      new Vec2(arguments[0], arguments[1]);
+    if(acc) acc.setXY(x, y);
+    else this.accel = new Vec2(x, y);
     return this;
   };
-  GameObject.prototype.move = function( /* dX, dY | delta */ ) {
+  GameObject.prototype.setAcceleration = function( a ) {
+    var acc = this.getAcceleration();
+    if(acc) acc.set(a);
+    else this.accel = a.clone();
+    return this;
+  };
+  GameObject.prototype.moveXY = function( dX, dY ) {
     var p = this.getPosition();
-    if(p) this.setPosition(p.add.apply(p, arguments));
+    if(p) this.setPosition(p.addXY(dX, dY));
     return this;
   };
-  GameObject.prototype.accelerate = function( /* dX, dY | deltaSpeed */ ) {
+  GameObject.prototype.move = function( delta ) {
+    var p = this.getPosition();
+    if(p) this.setPosition(p.add(delta));
+    return this;
+  };
+  GameObject.prototype.accelerateXY = function( dX, dY ) {
     var spd = this.getSpeed();
-    if(spd) this.setSpeed(spd.add.apply(spd, arguments));
+    if(spd) this.setSpeed(spd.addXY(dX, dY));
+    return this;
+  };
+  GameObject.prototype.accelerate = function( deltaSpeed ) {
+    var spd = this.getSpeed();
+    if(spd) this.setSpeed(spd.add(deltaSpeed));
     return this;
   };
 //______________________________________________________________________________
@@ -250,17 +279,24 @@ Game.objects.Object = (function(){
     gameManager.removeObject(this);
   };
   GameObject.prototype.onDeath = function( gameManager ) {
+    /*
     delete this.position; delete this.speed; delete this.accel;
     if(this.renderer) { delete this.renderer; }
     if(this.collider) { delete this.collider; }
+    */
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# position checkers
-  GameObject.prototype.isOutOfMap = function( mapRect, margin
-                                                  /* | marginX*/, marginY ) {
+/**
+ * return 0 if the object is in the rect. otherwise :
+ *  result & 1 == 1 if object is on left.
+ *  result & 2 == 2 if object is above.
+ *  result & 4 == 4 if object is on right.
+ *  result & 8 == 8 if object is below.
+ */
+  GameObject.prototype.isOutOfMap = function( mapRect, marginX, marginY ) {
     var rect = mapRect.clone();
-    if(!isNull(margin)) rect.addMargin(-margin, exists(marginY)?
-                                                            -marginY : -margin);
+    if(exists(marginX)) rect.addMarginsXY(-marginX, exists(marginY)? -marginY : -marginX);
     var pos = this.getPosition();
     if(pos) {
       if(rect.contains(pos)) return 0;
@@ -274,18 +310,18 @@ Game.objects.Object = (function(){
     }
     return 0;
   };
-  GameObject.prototype.maintainInRect = function ( rect, margin
-                                                    /* | marginX*/, marginY ) {
-    if(margin) rect = rect.clone().addMargin(-margin, exists(marginY)? -marginY :
-                                                                       -margin);
+  GameObject.prototype.maintainInRect = function ( rect, marginX, marginY ) {
+    if(exists(marginX))
+      rect = rect.clone().addMarginsXY(-marginX, exists(marginY)? -marginY :
+                                                                       -marginX);
     var objRect = this.getRect(); var pos = this.getPosition();
     var speed = this.getSpeed();
     var dX = objRect.left<rect.left ? rect.left-objRect.left :
-            (objRect.right>rect.right ? rect.right-objRect.right : 0);
+             objRect.right>rect.right ? rect.right-objRect.right : 0;
     var dY = objRect.top<rect.top ? rect.top-objRect.top :
-            (objRect.bottom>rect.bottom ? rect.bottom-objRect.bottom : 0);
-    if(dX!==0){ pos.x+=dX; if((speed.x>0&&dX<0)||(speed.x<0&&dX>0)) speed.x=0; }
-    if(dY!==0){ pos.y+=dY; if((speed.y>0&&dY<0)||(speed.y<0&&dY>0)) speed.y=0; }
+             objRect.bottom>rect.bottom ? rect.bottom-objRect.bottom : 0;
+    if(dX){ pos.x+=dX; if((speed.x>0&&dX<0)||(speed.x<0&&dX>0)) speed.x=0; }
+    if(dY){ pos.y+=dY; if((speed.y>0&&dY<0)||(speed.y<0&&dY>0)) speed.y=0; }
   };
   GameObject.prototype.mustKeepInRect = function() { return false; };
 //______________________________________________________________________________

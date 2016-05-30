@@ -58,11 +58,12 @@ Game.objects.interactives = (function(){
           this.getCollider().rotate(-theta);
           object.getCollider().rotate(-theta);
           objPos = Vec2.translation(pos, objPos).rotate(-theta).add(pos);
-          objSpeed = new Vec2(objSpeed).rotate(-theta);
+          objSpeed = objSpeed.clone().rotate(-theta);
         }
         objRect = object.getCollider().getRect(objPos);
         rect = this.getCollider().getRect();
-        var delta = new Vec2();
+        var delta = Vec2.zero();
+        // TODO modifier le 0.01 pour éviter que les objets lents puissent traverser
         if(!this.enableAboveCross && rect.below(objPos) && objSpeed.y >=-0.01){
           delta.y = rect.top - objRect.bottom;
         }
@@ -80,7 +81,7 @@ Game.objects.interactives = (function(){
           object.getCollider().rotate(theta);
           delta.rotate(theta);
         }
-        if(!delta.equals(Vec2.ZERO)) this.repulse(object, delta);
+        if(!delta.isZero()) this.repulse(object, delta);
       };
       return RectangularObstacle;
     })();
@@ -101,7 +102,7 @@ Game.objects.interactives = (function(){
         if(theta !== 0) {
           object.getCollider().rotate(-theta);
           objPos = d.rotate(-theta).add(pos);
-          objSpeed = new Vec2(objSpeed).rotate(-theta);
+          objSpeed = objSpeed.clone().rotate(-theta);
         }
         if(objSpeed.x <= 0) {
           var objRect = object.getCollider().getRect(objPos);
@@ -110,7 +111,7 @@ Game.objects.interactives = (function(){
             object.getCollider().rotate(theta);
             delta.rotate(theta);
           }
-          if(!delta.equals(Vec2.ZERO)) this.repulse(object, delta);
+          if(!delta.isZero()) this.repulse(object, delta);
         }
         else if(theta !== 0) object.getCollider().rotate(theta);
       };

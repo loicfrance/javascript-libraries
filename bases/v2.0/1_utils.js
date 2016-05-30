@@ -41,3 +41,9 @@ window['TYPE_BOOLEAN'  ] = 'boolean';
 window['TYPE_NUMBER'   ] = 'number';
 window['TYPE_STRING'   ] = 'string';
 window['TYPE_FUNCTION' ] = 'function';
+console.stack = ( str ) =>{
+  console.error(new Error(str).stack);
+};
+console.deprecated = ( str ) =>{
+  console.stack('deprecated : ' + str);
+};

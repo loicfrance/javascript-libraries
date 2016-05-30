@@ -4,33 +4,39 @@
 /**
  * @constructor
  */
-var Vec2 = function(/* x, y | vec2 | nothing */) {
-  switch(arguments.length) {
-    case 1 : this.x = arguments[0].x; this.y = arguments[0].y; break;
-    case 2 : this.x = arguments[0]; this.y = arguments[1]; break;
-    default : this.x = this.y = 0; break;
-  }
+var Vec2 = function(x, y /* | vec2 | nothing */) {
+  this.x = x;
+  this.y = y;
 };
-
-Vec2.prototype.set = function(/* x, y | vec2 | nothing*/) {
-  switch(arguments.length) {
-    case 1 : this.x = arguments[0].x; this.y = arguments[0].y; break;
-    case 2 : this.x = arguments[0]; this.y = arguments[1]; break;
-    default : this.x = this.y = 0; break;
-  }
+Vec2.prototype.clone = function() { return new Vec2(this.x, this.y); };
+Vec2.prototype.setXY = function( x, y ) {
+  this.x = x;
+  this.y = y;
   return this;
 };
-Vec2.prototype.add = function(/* x, y | vec2*/) {
-  switch(arguments.length) {
-    case 1 : this.x += arguments[0].x; this.y += arguments[0].y; break;
-    case 2 : this.x += arguments[0]; this.y += arguments[1]; break;
-    default : break;
-  }
+Vec2.prototype.raz = function() {
+  this.x = this.y = 0;
   return this;
 };
-Vec2.prototype.remove = function( vec2 ) {
-  this.x -= vec2.x;
-  this.y -= vec2.y;
+Vec2.prototype.set = function( vec ) {
+  if(!(vec instanceof Vec2)) console.stack('illegal arguments : ' + arguments);
+  this.x = vec.x;
+  this.y = vec.y;
+  return this;
+};
+Vec2.prototype.addXY = function( x, y ) {
+  this.x += x;
+  this.y += y;
+  return this;
+};
+Vec2.prototype.add = function( vec ) {
+  this.x += vec.x;
+  this.y += vec.y;
+  return this;
+};
+Vec2.prototype.remove = function( vec ) {
+  this.x -= vec.x;
+  this.y -= vec.y;
   return this;
 };
 Vec2.prototype.mul = function( factor ) {
@@ -44,34 +50,37 @@ Vec2.prototype.getAngle = function() { return Math.atan2(this.y, this.x); };
 Vec2.prototype.rotate = function( radians ) {
   var angle = this.getAngle() + radians;
   var mag = this.magnitude();
-  this.set(mag*Math.cos(angle), mag*Math.sin(angle));
+  this.setXY(mag*Math.cos(angle), mag*Math.sin(angle));
   return this;
 };
 Vec2.prototype.rotateAround = function( center, radians) {
   var delta = Vec2.translation(center, this);
   delta.rotate(radians);
   this.set(delta.add(center));
+  return this;
 };
 Vec2.prototype.toString = function() {
   return '(' + this.x + ', ' + this.y + ')';
 };
-Vec2.prototype.equals = function( x, y ) {
-  return y === undefined ? this.x === x.x && this.y === x.y :
-                           this.x === x && this.y === y;
+Vec2.prototype.equalsXY = function( x, y ) {
+  return this.x == x && this.y == y;
 };
-Vec2.prototype.isZero = function() {return !(this.x||this.y);};
-Vec2.prototype.getUnit = function() { return new Vec2(this).normalize(); };
+Vec2.prototype.equals = function( vec ) {
+  return this.x === vec.x && this.y === vec.y;
+};
+Vec2.prototype.isZero = function() { return !(this.x||this.y); };
+Vec2.prototype.getUnit = function() { return this.clone().normalize(); };
 Vec2.prototype.getMirror = function( center ) {
   return Vec2.translation(this, center).add(center);
 };
 Vec2.prototype.getHorizontalMirror = function ( axisX ) {
-  var v = new Vec2(this);
+  var v = this.clone();
   if(axisX) v.x = 2*axisX - v.x;
   else v.x = -v.x;
   return v;
 };
 Vec2.prototype.getVerticalMirror = function( axisY ) {
-  var v = new Vec2(this);
+  var v = this.clone();
   if(axisY) v.y = 2*axisY - v.y;
   else v.y = -v.y;
   return v;
@@ -106,19 +115,28 @@ Vec2.ccw = ( A, B, C ) => (C.y-A.y)*(B.x-A.x)>(B.y-A.y)*(C.x-A.x);
 Vec2.ccw2 = ( AB, AC ) => AC.y*AB.x>AB.y*AC.x;
 Vec2.getRadiansBetween = (from, to) => to.getAngle()-from.getAngle();
 Vec2.createFromRadians = radians=>new Vec2(Math.cos(radians),Math.sin(radians));
-
+Vec2.copy = v =>new Vec2(v.x, v.y);
+Vec2.zero = function() { return new Vec2(0,0); };
+Vec2.createVec2Array = function( xyxyArray ) {
+  var len = Math.floor(xyxyArray.length/2);
+  var result = new Array(len);
+  var i=len, i2;
+  while(i--) { i2 = 2*i; 
+    result[i] = new Vec2(xyxyArray[i2], xyxyArray[i2+1]);
+  }
+  return result;
+};
 /** @const */
-Vec2.ZERO = new Vec2();
+Vec2.ZERO = Vec2.zero();
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - -Rect (not a shape) - - - - - - - - - - - - - - -
 //******************************************************************************
 var Rect = function(left, top, right, bottom) {
-  if(bottom !== undefined) {
-      this.left = arguments[0]; this.top = arguments[1];
-      this.right = arguments[2]; this.bottom = arguments[3];
-  } else {
-    this.left = this.top = this.right = this.bottom = 0;
-  }
+    this.left = left; this.right = right;
+    this.top = top; this.bottom = bottom;
+};
+Rect.prototype.clone = function() {
+  return new Rect(this.left, this.top, this.right, this.bottom);
 };
 Rect.prototype.center = function() {
   return new Vec2(this.left+this.right, this.top+this.bottom).mul(0.5);
@@ -127,32 +145,44 @@ Rect.prototype.overlap = function( rect ) {
   return rect.left <= this.right && rect.top <= this.bottom
       && rect.right >= this.left && rect.bottom >= this.top;
 };
-Rect.prototype.contains = function( x, y /* | Vec2 | Rect*/) {
-  return  (y !== undefined) ?
-                x >= this.left && x <= this.right
-                && y >= this.top && y <= this.bottom :
-          (x.x !== undefined) ?
-                this.contains(x.x, x.y) :
-          (x instanceof Rect)
-                && x.left > this.left && x.right < this.right
-                && x.top > this.top && x.bottom < this.bottom;
+Rect.prototype.containsXY = function( x, y ) {
+  return x >= this.left && x <= this.right
+      && y >= this.top && y <= this.bottom;
 };
-Rect.prototype.onLeftOf = function( x, y /* |  rect | vec2*/ ) {
-  return this.right < (y===undefined)? (x instanceof Rect)? x.left : x.x : x;
+Rect.prototype.containsRect = function( rect ) {
+  return rect.left >= this.left && rect.right <= this.right
+      && rect.top >= this.top && rect.bottom <= this.bottom;
 };
-Rect.prototype.onRightOf = function( x, y /* | rect | vec2*/ ) {
-  return this.left > (y===undefined)? (x instanceof Rect)? x.right : x.x : x;
+Rect.prototype.contains = function( vec ) {
+  return vec.x >= this.left && vec.x <= this.right
+      && vec.y >= this.top && vec.y <= this.bottom;
 };
-Rect.prototype.above = function( x, y /* | rect | vec2*/ ) {
-  return this.bottom < (y===undefined)? (x instanceof Rect)? x.top : x.y : y;
-};
-Rect.prototype.below = function( /* rect | x, y | vec2*/ ) {
-  return this.top > (y===undefined)? (x instanceof Rect)? x.bottom : x.y : y;
-};
-Rect.prototype.addMargin = function( margin/* | marginX*/, marginY ) {
+Rect.prototype.onLeftOfXY = function( x, y ) { return this.right < x; };
+Rect.prototype.onLeftOfRect = function( r ) { return this.right < r.left; };
+Rect.prototype.onLeftOf = function( vec ) { return this.right < vec.x; };
+Rect.prototype.onRightOfXY = function( x, y ) { return this.left > x; };
+Rect.prototype.onRightOfRect = function( r ) { return this.left > r.right; };
+Rect.prototype.onRightOf = function( vec ) { return this.left > vec.x; };
+Rect.prototype.aboveXY = function( x, y ) { return this.bottom < y; };
+Rect.prototype.aboveRect = function( r ) { return this.bottom < r.top; };
+Rect.prototype.above = function( vec ) { return this.bottom < vec.y; };
+Rect.prototype.belowXY = function( x, y ) { return this.top > y; };
+Rect.prototype.belowRect = function( r ) { return this.top > r.bottom; };
+Rect.prototype.below = function( vec ) { return this.top > vec.y; };
+Rect.prototype.addMargin = function( margin ) {
   this.left -= margin; this.right += margin;
-  var my = exists(marginY)? marginY: margin;
-  this.top -= my; this.bottom += my;
+  this.top -= margin; this.bottom += margin;
+  return this;
+};
+Rect.prototype.addMarginsXY = function( marginX, marginY ) {
+  this.left -= marginX; this.right += marginX;
+  this.top -= marginY; this.bottom += marginY;
+  return this;
+};
+Rect.prototype.addMargins = function( marginLeft, marginTop,
+                                      marginRight, marginBottom ) {
+  this.left -= marginLeft; this.right += marginRight;
+  this.top -= marginTop; this.bottom += marginBottom;
   return this;
 };
 Rect.prototype.pushPath = function( context ) {
@@ -165,28 +195,25 @@ Rect.prototype.draw = function( context, fill, stroke ) {
   if(fill) context.fill();
   if(stroke) context.stroke();
 };
-Rect.prototype.set = function(left, top, right, bottom /* | rect */) {
-  if (bottom !== undefined) {
-    this.top = top;
-    this.left = left;
-    this.right = right;
-    this.bottom = bottom;
-  } else {
-    this.top = left.top;
-    this.left = left.left;
-    this.right = left.right;
-    this.bottom = left.bottom;
-  }
+Rect.prototype.setRect = function( rect ) {
+  this.left = rect.left; this.right = rect.right;
+  this.top = rect.top; this.bottom = rect.bottom;
   return this;
 };
-Rect.prototype.move = function( x, y /* | delta*/) {
-  if(y !== undefined) {
-    this.left += x; this.right += x;
-    this.top += y; this.bottom += y;
-  } else {
-    this.left += x.x; this.right += x.x;
-    this.top += x.y; this.bottom += x.y;
-  }
+Rect.prototype.set = function(left, top, right, bottom /* | rect */) {
+  this.top = top;
+  this.left = left;
+  this.right = right;
+  this.bottom = bottom;
+  return this;
+};
+Rect.prototype.moveXY = function( x, y ) {
+  this.left += x; this.right += x;
+  this.top += y; this.bottom += y;
+};
+Rect.prototype.move = function( delta) {
+  this.left += delta.x; this.right += delta.x;
+  this.top += delta.y; this.bottom += delta.y;
   return this;
 };
 Rect.prototype.width  = function() { return this.right - this.left; };
@@ -194,36 +221,36 @@ Rect.prototype.height = function() { return this.bottom - this.top; };
 Rect.prototype.ratio  = function() { return this.width() / this.height(); };
 Rect.prototype.perimeter = function(){return 2*this.width() + 2*this.height();};
 Rect.prototype.area = function() { return this.width()*this.height(); };
-Rect.prototype.clone = function() {
-  return new Rect(this.left, this.top, this.right, this.bottom);
-};
 Rect.prototype.getShape = function() {
-  return new Polygon([
-    {x:this.left, y:this.top}, {x:this.right, y:this.top},
-    {x:this.right, y:this.bottom}, {x:this.left, y:this.bottom} 
-  ]);
+  return new Polygon(Vec2.createVec2Array(
+    [this.left,this.top,  this.right,this.top,
+    this.right,this.bottom,  this.left,this.bottom]));
 };
 Rect.prototype.toString = function() { return '[' + this.left + ', ' +
     this.top + ', ' + this.right + ', ' + this.bottom + ']';
 };
-Rect.getUnion = function(/* rect1, rect2, rect3, ...*/) {
-  var res = arguments[0].clone();
-  for(var i=1; i< arguments.length; i++) {
-    var left = res.left;
-    if(arguments[i].left < left) res.left = arguments[i].left;
-    res.left = Math.min(res.left, arguments[i].left);
-    res.top = Math.min(res.top, arguments[i].top);
-    res.right = Math.max(res.right, arguments[i].right);
-    res.bottom = Math.max(res.bottom, arguments[i].bottom);
-  }
-  return res;
+Rect.getUnion = function(rects) {
+  var i=rects.length;
+  if(i) {
+    var res = rects[--i].clone();
+    while(i--) {
+      res.left = Math.min(res.left, rects[i].left);
+      res.top = Math.min(res.top, rects[i].top);
+      res.right = Math.max(res.right, rects[i].right);
+      res.bottom = Math.max(res.bottom, rects[i].bottom);
+    }
+    return res;
+  }else return Rect.createEmpty();
 };
-Rect.createFromPoint=(x,y)=>y?new Rect(x,y,x,y):x?new Rect(x.x, x.y, x.x, x.y):new Rect(0,0,0,0);
+Rect.createEmpty=_=>new Rect(0,0,0,0);
+Rect.copy=r=>new Rect(r.left, r.top, r.right, r.bottom);
+Rect.createFromPoint=(vec)=>new Rect(vec.x, vec.y, vec.x, vec.y);
+Rect.createFromXY=( x, y )=>new Rect(x,y,x,y);
 
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - - - - Shape - - - - - - - - - - - - - - - - - -
 //******************************************************************************
-var Shape = function( center ) { this.center = new Vec2(center); };
+var Shape = function( center ) { this.center = center.clone(); };
 Shape.prototype.mirrorVertically = function( axisY )   {
   this.center.set(this.center.getVerticalMirror(axisY));
   return this;
@@ -237,7 +264,7 @@ Shape.prototype.growDistance=function( delta )  { return this; };
 Shape.prototype.rotate    = function( radians ) { return this; };
 Shape.prototype.pushPath  = function( context ) { };
 Shape.prototype.getCenter = function() { return this.center; };
-Shape.prototype.copyCenter= function() { return new Vec2(this.center); };
+Shape.prototype.copyCenter= function() { return this.center.clone(); };
 Shape.prototype.intersect = function( shape ) { return false; };
 Shape.prototype.contains  = function( point ) { return false; };
 Shape.prototype.getRect   = function() { return Rect.createFromPoint(this.center); };
@@ -248,12 +275,20 @@ Shape.prototype.clone     = function() { return new Shape(this.center); };
 Shape.prototype.getCircle = function() {
   return new Circle(this.center, this.getRadius());
 };
-Shape.prototype.move = function( /* dx, dy | delta */ ) {
-  this.center.add.apply(this.center, arguments);
+Shape.prototype.moveXY = function( dX, dY ) {
+  this.center.addXY(dX, dY);
   return this;
 };
-Shape.prototype.moveTo = function( /* pos | x, y */ ) {
-  this.center.set.apply(this.center, arguments);
+Shape.prototype.move = function( delta ) {
+  this.center.add(delta);
+  return this;
+};
+Shape.prototype.moveToXY = function( x, y ) {
+  this.center.setXY(x, y);
+  return this;
+};
+Shape.prototype.moveTo = function( pos ) {
+  this.center.set(pos);
   return this;
 };
 Shape.prototype.draw = function( context, fill, stroke ) {
@@ -311,7 +346,7 @@ Circle.prototype.clone = Circle.prototype.getCircle;
 // - - - - - - - - - - - - - - - - - - -Line - - - - - - - - - - - - - - - - - -
 //******************************************************************************
 var Line = function( p1, p2 ) {
-  Shape.call(this, new Vec2(p1).add(p2).mul(0.5));
+  Shape.call(this, p1.clone().add(p2).mul(0.5));
   var u = Vec2.translation(p1, p2);
   this.radians = u.getAngle();
   this.length = u.magnitude();
@@ -345,18 +380,17 @@ Line.prototype.pushPath = function( context ) {
   context.lineTo(this.center.x + dX, this.center.y + dY);
 };
 Line.prototype.getP0 = function() {
-  return new Vec2(this.center).add(
+  return this.center.clone().addXY(
     -(this.length*Math.cos(this.radians))/2,
     -(this.length*Math.sin(this.radians))/2);
 };
 Line.prototype.getP1 = function() {
-  return new Vec2(this.center).add(
+  return this.center.clone().addXY(
     (this.length*Math.cos(this.radians))/2,
     (this.length*Math.sin(this.radians))/2);
 };
 Line.prototype.setP0 = function( p0 ) {
-  var p1 = this.getP1();
-  var trans = Vec2.translation(p0, p1);
+  var trans = Vec2.translation(p0, this.getP1());
   this.radians = trans.getAngle();
   this.length = trans.magnitude();
   this.center.set(trans.mul(0.5).add(p0));
@@ -370,10 +404,20 @@ Line.prototype.setP1 = function( p1 ) {
   this.center.set(trans.mul(0.5).add(p0));
   return this;
 };
+Line.prototype.setPoints = function( p0, p1 ) {
+  var trans = Vec2.translation(p0, p1);
+  this.radians = trans.getAngle();
+  this.length = trans.magnitude();
+  this.center.set(trans.mul(0.5).add(p0));
+  return this;
+};
 Line.prototype.getVect = function() {
   return new Vec2(
       this.length*Math.cos(this.radians),
       this.length*Math.sin(this.radians));
+};
+Line.prototype.getDirectorVect = function() {
+  return Vec2.createFromRadians(this.radians);
 };
 Line.prototype.intersect = function( shape ) {
   if(shape instanceof Circle) {
@@ -384,8 +428,8 @@ Line.prototype.intersect = function( shape ) {
     
     let AB = Vec2.translation(A, B);
     let AC = Vec2.translation(A, shape.center);
-    var u = new Vec2(AB).normalize();
-    var I = new Vec2(u).mul(Vec2.dotProd(u, AC)).add(A);
+    var u = this.getDirectorVect();
+    var I = u.clone().mul(Vec2.dotProd(u, AC)).add(A);
     
     return I.x > Math.min(A.x, B.x) && I.x < Math.max(A.x, B.x) &&
            I.y > Math.min(A.y, B.y) && I.y < Math.max(A.y, B.y) &&
@@ -405,12 +449,9 @@ Line.prototype.intersect = function( shape ) {
 };
 Line.prototype.contains = function( point ) {
   var v = Vec2.translation(this.center, point);
-  var u = this.getVect();
-  u.mul(1/u.magnitude());
-  u.mul(Vec2.distance(this.center, point));
-  if(v.equals(u)) return true;
-  u.mul(-1);
-  return v.equals(u);
+  var u = this.getDirectorVect();
+  return v.equals(u.mul(Vec2.distance(this.center, point)))
+        || v.equals(u.mul(-1));
 };
 Line.prototype.getRect = function() {
   var p1 = this.getP1(), p0 = this.getP0(), left, top, right, bottom;
@@ -429,12 +470,8 @@ Line.prototype.clone = function() {
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - - - - Point - - - - - - - - - - - - - - - - - -
 //******************************************************************************
-var Point = function(/*x, y | vec */) {
-  switch(arguments.length) {
-    case 1 : Shape.call(this, arguments[0]); break;
-    case 2 : Shape.call(this, new Vec2(arguments[0], arguments[1])); break;
-    default : Shape.call(this, Vec2.ZERO);
-  }
+var Point = function( vec ) {
+  Shape.call(this, vec);
 };
 classExtend(Shape, Point);
 Point.prototype.pushPath = function( context ) {
@@ -463,61 +500,72 @@ Point.prototype.clone = function() {
 // - - - - - - - - - - - - - - - - - - -Path - - - - - - - - - - - - - - - - - -
 //******************************************************************************
 var Path = function( pointsArray ) {
-  var center = new Vec2();
+  var center = Vec2.zero();
   this.points = [];
   if(pointsArray) {
-    if(!exists(pointsArray.length)) pointsArray = arguments;
-    var i, len = pointsArray.length;
-    for(i=0; i< len; i++) {
-      center.add(pointsArray[i]);
+    var len = pointsArray.length, i=len;
+    if(len>0) {
+      while(i--) {
+        center.add(pointsArray[i]);
+      }
+      center.mul(1/len);
+      for(i=0; i< len; i++) {
+        this.points.push(pointsArray[i].clone().remove(center));
+      }
     }
-    center.mul(1/len);
-    var p;
-    for(i=0; i< len; i++) {
-      p = new Vec2(pointsArray[i]).remove(center);
-      this.points.push(p);
+    else if(len === undefined){
+      pointsArray = arguments;
+      len = pointsArray.length;
+      if(len>0) {
+        i=len;
+        while(i--) {
+          center.add(pointsArray[i]);
+        }
+        center.mul(1/len);
+        for(i=0; i< len; i++) {
+          this.points.push(pointsArray[i].clone().remove(center));
+        }
+      }
     }
   }
   Shape.call(this, center);
+  if(isNaN(this.center.x)) console.stack(center);
 };
 classExtend(Shape, Path);
 Path.prototype.grow = function( factor ) {
-  for(var i= this.points.length-1; i>=0; i--) {
+  var i=this.points.length;
+  if(i>0) while(i--) {
     this.points[i].mul(factor);
   }
   return this;
 };
 Path.prototype.growDistance = function( delta ) {
-  var norm, p;
-  for(var i=this.points.length-1; i>=0; i--) { p = this.points[i];
+  var norm, p, i=this.points.length;
+  if(i>0) while(i--) { p = this.points[i];
     norm = p.magnitude();
     p.mul(1/norm).mul(norm+delta);
   }
   return this;
 };
 Path.prototype.rotate = function( radians ) {
-  var rad, mag, p;
-  for(var i=this.points.length-1; i>=0; i--) { p = this.points[i];
+  var rad, mag, p, i=this.points.length;
+  if(i>0) while(i--) { p = this.points[i];
     p.rotate(radians);
-/*    rad = p.getAngle();
-    rad += radians;
-    mag = p.magnitude();
-    p.set(mag*Math.cos(rad), mag*Math.sin(rad));
-*/  }
+  }
   return this;
 };
 Path.prototype.mirrorVertically = function( axisY ) {
   Path.super.mirrorVertically.call(this, axisY);
-  var p;
-  for(var i=this.points.length-1; i>=0; i--) { p = this.points[i];
+  var p, i=this.points.length;
+  if(i>0) while(i--) { p = this.points[i];
     p.set(p.getVerticalMirror());
   }
   return this;
 };
 Path.prototype.mirrorHorizontally = function( axisX ) {
   Path.super.mirrorHorizontally.call(this, axisX);
-  var p;
-  for(var i=this.points.length-1; i>=0; i--) { p = this.points[i];
+  var p, i=this.points.length;
+  if(i>0) while(i--) { p = this.points[i];
     p.set(p.getHorizontalMirror());
   }
   return this;
@@ -535,7 +583,7 @@ Path.prototype.pushPath = function( context ) {
 };
 Path.prototype.getLines = function() {
   var result = [], lenm1 = this.points.length-1;
-  for(var i=0; i< lenm1; i++) {
+  for(var i=0; i< lenm1; i++) { //optimize
     result.push(new Line(this.points[i], this.points[i+1]).move(this.center));
   }
   if(this.closed)
@@ -543,47 +591,45 @@ Path.prototype.getLines = function() {
   return result;
 };
 Path.prototype.intersect = function( shape ) {
-  var lines = this.getLines(), i, result = false;
+  var lines = this.getLines(), i=lines.length;
+  if(!i) return false;
   if(shape instanceof Path) {
     var otherLines = shape.getLines(), len = otherLines.length, line;
     var j;
-    for(i=lines.length-1; i>=0; i--) {
+    while(i--) {
       line = lines[i];
-      for(j=0; j< len; j++) {
-        if(otherLines[j].intersect(line)) {
-          result = true;
-          break;
-        }
+      j=len;
+      while(j--) {
+        if(otherLines[j].intersect(line))
+          return true;
       }
-      if(result) break;
     }
   }
   else {
-    for(i=lines.length-1; i>=0; i--) {
+    while(i--) {
       if(lines[i].intersect(shape)) {
-        result = true;
-        break;
+        return true;
       }
     }
   }
-  return result;
+  return false;
 };
 Path.prototype.getIntersectionLine = function( shape ) {
-  var lines = this.getLines(), i, result = false;
+  var lines = this.getLines(), i=lines.length, result = false;
+  if(!i) return null;
   if(shape instanceof Path) {
     var otherLines = shape.getLines(), len = otherLines.length, line;
     var j;
-    for(i=lines.length-1; i>=0; i--) {
+    while(i--) {
       line = lines[i];
-      for(j=0; j< len; j++) {
-        if(otherLines[j].intersect(line)) {
-          result = line;
-          break;
-      } }
-      if(result) break;
+      j=len;
+      while(j--) {
+        if(otherLines[j].intersect(line))
+          return line;
+      }
   } }
   else {
-    for(i=lines.length-1; i>=0; i--) {
+    while(i--) {
       if(lines[i].intersect(shape)) {
         result = lines[i];
         break;
@@ -593,7 +639,7 @@ Path.prototype.getIntersectionLine = function( shape ) {
 Path.prototype.contains = function( point ) {
   var rect = this.getRect();
   var width = rect.width()+10, height = rect.height()+10;
-  var endPoint = new Vec2(point);
+  var endPoint = point.clone();
   var lines = [
     new Line(point, endPoint.add(width, 0)),
     new Line(point, endPoint.add(-2*width, 0)),
@@ -623,47 +669,46 @@ Path.prototype.getRadius = function() {
   return Math.sqrt(r);
 };
 Path.prototype.redefineCenter = function(delta) {
-  var len = this.points.length, i=0;
+  var i = this.points.length;
+  if(!i) return;
   if(delta) {
-    delta = new Vec2(delta).mul(-1);
-    for(i=0; i< len; i++) {
+    delta = delta.clone().mul(-1);
+    while(i--)
       this.points[i].move(delta);
-  } }
+  }
   else {
-    delta = new Vec2();
-    for(i=0; i<len; i++) {
+    delta = Vec2.zero();
+    var len=i;
+    while(i--)
       delta.add(this.points[i]);
-    }
     delta.mul(1/len);
     this.center.set(delta);
   }
 };
 Path.prototype.perimeter = function() {
-  var res = 0, len = this.points.length-1;
-  for(var i=len-1; i>0; i--) {
-    res += Vec2.distance(this.points[i], this.points[i-1]);
-  }
-  if(this.closed) res += Vec2.distance(this.points[len-1], this.points[0]);
+  var i = this.points.length-1,
+      res = this.closed? Vec2.distance(this.points[i], this.points[0]) : 0;
+  while(i) res += Vec2.distance(this.points[i--], this.points[i]);
   return res;
 };
 Path.prototype.area = function() {
-  var res = 0, len = this.points.length;
-  var p0 = this.points[len-1], p1;
-  for(var i=0; i<len; i++) {
-    p1 = this.points[i];
+  var res = 0, len = this.points.length, i=len;
+  var p0, p1 = this.points[0];
+  while(i--) {
+    p0 = this.points[i];
     res += (p0.x+p1.x)*(p0.y-p1.y);
-    p0 = p1;
+    p1 = p0;
   }
   return res/2;
 };
 Path.prototype.clone = function() {
-  var result = new Path();
+  var result = new Path([]);
   result.center.set(this.center);
-  result.points = [];
-  for(var i=this.points.length-1; i>= 0; i--) {
-    result.points.push(new Vec2(this.points[i]));
-  }
-  if(this.closed) result.closed = true;
+  var i=this.points.length;
+  var p = new Array(i);
+  while(i--) p[i] = this.points[i].clone();
+  result.points = p;
+  if(this.closed && !result.closed) result.closed = true;
   return result;
 };
 //______________________________________________________________________________
@@ -688,20 +733,22 @@ Polygon.createRectangle = (center, width, height)=> {
 var RegularPolygon = function( center, radius, pointsNumber, startRadians ) {
   var dR = (Math.PI*2)/pointsNumber;
   var angle = startRadians;
-  this.center = new Vec2(center);
+  this.center = center.clone();
   this.points = new Array(pointsNumber);
-  var i=0;
-  if(exists(radius.length)) {
-    for(i=0; i< pointsNumber; i++) {
-      this.points[i] = Vec2.createFromRadians(angle).mul(radius[i%radius.length]);
+  var i=pointsNumber;
+  var rLen = radius.length;
+  if(exists(rLen)) {
+    while(i--) {
+      this.points[i] = Vec2.createFromRadians(angle).mul(radius[i%rLen]);
       angle += dR;
-  } }
+    }
+  }
   else {
-    for(i=0; i< pointsNumber; i++) {
-      this.points[i]=Vec2.createFromRadians(angle).mul(radius);
+    while(i--) {
+      this.points[i] = Vec2.createFromRadians(angle).mul(radius);
       angle += dR;
-  } }
-  this.closed = true;
+    }
+  }
 };
 classExtend(Polygon, RegularPolygon);
 
@@ -727,7 +774,7 @@ Ray.prototype.mirrorHorizontally = function( axisX ) {
   this.radians = Math.PI - this.radians;
 };
 Ray.prototype.endPoint = function( length ) {
-  var result = new Vec2(this.center);
+  var result = this.center.clone();
   result.add(Math.cos(this.radians)*length, Math.sin(this.radians)*length);
   return result;
 };

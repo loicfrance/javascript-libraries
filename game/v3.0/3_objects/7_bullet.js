@@ -8,7 +8,7 @@ Game.objects.bullets = (function(){
 // = = = = = = = = = = = = = = = = =constructor= = = = = = = = = = = = = = = = =
     var Bullet = function( damages, initialPosition, speed, lifeTime ) {
       parent.call(this, initialPosition);
-      if(exists(speed)) this.speed = new Vec2(speed);
+      if(exists(speed)) this.speed = speed.clone();
       this.damages = damages;
       if(!isNull(lifeTime)) this.lifeTime = lifeTime;
     };
@@ -18,10 +18,8 @@ Game.objects.bullets = (function(){
 // = = = = = = = = = = = = = = = = = =public = = = = = = = = = = = = = = = = = =
 // - - - - - - - - - - - - - - - - - -fields - - - - - - - - - - - - - - - - - -
     Bullet.defaultTraceDrawer = new TraceDrawer(0.05, "#FF0000");
-    Bullet.defaultShape = new Polygon([
-      {x:-10 , y:2 }, {x:5 , y:2 }, {x:7 , y:1 }, {x:8 , y:0 }, 
-      {x:7 , y:-1 }, {x:5 , y:-2 }, {x:-10 , y:-2 }
-    ]);
+    Bullet.defaultShape = new Polygon(Vec2.createVec2Array(
+      [-10,2,   5,2,   7,1,   8,0,   7,1,   5,-2,   -10,-2]));
 // - - - - - - - - - - - - - - - - - -methods- - - - - - - - - - - - - - - - - -
     Bullet.prototype.setLauncher = function( object ) {
       this.launcher = object;

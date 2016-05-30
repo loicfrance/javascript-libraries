@@ -28,13 +28,13 @@ Game.hud.views.Layout = (function(){
     this.getParentView().updateRect(rect);
   };
   Layout.mouseMove = function(evt){
-    var rect, view, done=false, i=this.views.length;
+    var rect, view, done=false, i=this.views.length, pos = evt.position;
     while(i--) {
       view = this.views[i];
       if(done && view != currentView) continue;
       if(view.state & Game.hud.views.STATE.INACTIVE) continue;
       rect = view.getRect();
-      evt.position.set(position).add(-rect.left, -rect.top);
+      evt.position.set(pos).addXY(-rect.left, -rect.top);
       if(done && view == currentView) { currentView.onTouchEvent(evt); break; }
       if(view.onTouchEvent(evt)) {
         if(isNull(currentView)) { currentView = view; break; }
@@ -85,8 +85,8 @@ Game.hud.views.LinearLayout = (function() {
   };
   var getChildPosition = override(LinearLayout, 'getPosition',function(index){
     if(typeof index != TYPE_NUMBER) index = this.getIndexOf(index);
-    var result = new Vec2(this.getChild(index).getPosition()).add();
-    if(index>0) result.add(0,this.getChildRect(index-1).bottom);
+    var result = this.getChild(index).getPosition().clone();//.add(layout coords);
+    if(index>0) result.addXY(0,this.getChildRect(index-1).bottom);
     return result;
   });
   var getChildRect = override(LinearLayout, 'getRect', function(index){
@@ -94,12 +94,12 @@ Game.hud.views.LinearLayout = (function() {
     var result = getChildAt(index).getRect();
     if(index>0) {
       var previous = this.getChildRect(index-1);
-      if(this.horizontal) result.move(rtl?-previous.left : previous.right, 0);
-      else result.move(0, rtl?-previous.top: previous.bottom);
+      if(this.horizontal) result.moveXY(rtl?-previous.left : previous.right, 0);
+      else result.moveXY(0, rtl?-previous.top: previous.bottom);
     }
     else if(rtl) {
-      if(this.horizontal) result.move(this.getRect().width()-result.width(), 0);
-      else result.move(0, this.getRect().height()-result.height());
+      if(this.horizontal) result.moveXY(this.getRect().width()-result.width(), 0);
+      else result.moveXY(0, this.getRect().height()-result.height());
     }
     return result;
   });
