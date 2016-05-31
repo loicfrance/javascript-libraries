@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.Physics = (function(){
   var Physics = {
     G:6.67384E-11,

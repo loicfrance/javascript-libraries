@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.hud = {};
 Game.hud.Hud = (function(){
   var Hud = function(canvas) {
@@ -7,6 +11,7 @@ Game.hud.Hud = (function(){
       this.context2d = canvas.getContext('2d');
       canvas.style.background = '#00000000';
     }
+    this.alpha = 0.5;
     this.active = true; // set to false if you don't want to test mouse events on hud elements.
   };
   Hud.prototype.addView = function( view ) {
@@ -16,7 +21,12 @@ Game.hud.Hud = (function(){
     var index = this.views.indexOf(view);
     if(index >= 0) this.views.splice(index, 1);
   };
-  
+  Hud.prototype.setAlpha = function( alpha ) {
+    this.alpha = alpha;
+  };
+  Hud.prototype.getAlpha = function() {
+    return this.alpha;
+  };
   
   Hud.prototype.onRectUpdate = function( rect ) {
     for(var i=0; i<view.length; i++) {
@@ -37,6 +47,7 @@ Game.hud.Hud = (function(){
   };
   Hud.prototype.render = function( context2d, canvasRect ) {
     var len=this.views.length, i=0;
+    context2d.globalAlpha = this.getAlpha();
     while(i<len)this.views[i++].render(context2d, canvasRect);
   };
   Hud.prototype.mouseButton = function( btn, pressed ) {

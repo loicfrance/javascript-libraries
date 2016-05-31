@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.objects.interactives = (function(){
   var interactives = {};
   interactives.obstacles = (function(){

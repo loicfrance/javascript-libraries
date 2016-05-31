@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 //______________________________________________________________________________
 // - - - - - - - - - - - - - - - - - - -Vec2 - - - - - - - - - - - - - - - - - -
 //******************************************************************************
@@ -19,7 +23,6 @@ Vec2.prototype.raz = function() {
   return this;
 };
 Vec2.prototype.set = function( vec ) {
-  if(!(vec instanceof Vec2)) console.stack('illegal arguments : ' + arguments);
   this.x = vec.x;
   this.y = vec.y;
   return this;

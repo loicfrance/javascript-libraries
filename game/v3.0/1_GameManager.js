@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 if(!Date.now) Date.now = function() { return new Date().getTime(); };
 if(!exists(window.Game)) Game = {};
 //______________________________________________________________________________

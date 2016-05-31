@@ -1,3 +1,8 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
+
 Game.objects = {};
 Game.objects.Object = (function(){
   GameObject = function() {};
@@ -224,10 +229,7 @@ Game.objects.Object = (function(){
     return this;
   };
   GameObject.prototype.setPosition = function( p ) {
-    var pos = this.getPosition();
-    if(pos) pos.set(p);
-    else this.position = p.clone();
-    return this;
+    return this.setPositionXY(p.x, p.y);
   };
   GameObject.prototype.setSpeedXY = function( x, y ) {
     var spd = this.getSpeed();
@@ -236,10 +238,7 @@ Game.objects.Object = (function(){
     return this;
   };
   GameObject.prototype.setSpeed = function( s ) {
-    var spd = this.getSpeed();
-    if(spd) spd.set(s);
-    else this.speed = s.clone();
-    return this;
+    return this.setSpeedXY(s.x, s.y);
   };
   GameObject.prototype.setAccelerationXY = function( x, y ) {
     var acc = this.getAcceleration();
@@ -248,10 +247,7 @@ Game.objects.Object = (function(){
     return this;
   };
   GameObject.prototype.setAcceleration = function( a ) {
-    var acc = this.getAcceleration();
-    if(acc) acc.set(a);
-    else this.accel = a.clone();
-    return this;
+    return this.setAccelerationXY(a.x, a.y);
   };
   GameObject.prototype.moveXY = function( dX, dY ) {
     var p = this.getPosition();
@@ -259,9 +255,7 @@ Game.objects.Object = (function(){
     return this;
   };
   GameObject.prototype.move = function( delta ) {
-    var p = this.getPosition();
-    if(p) this.setPosition(p.add(delta));
-    return this;
+    return this.moveXY(delta.x, delta.y);
   };
   GameObject.prototype.accelerateXY = function( dX, dY ) {
     var spd = this.getSpeed();
@@ -269,9 +263,7 @@ Game.objects.Object = (function(){
     return this;
   };
   GameObject.prototype.accelerate = function( deltaSpeed ) {
-    var spd = this.getSpeed();
-    if(spd) this.setSpeed(spd.add(deltaSpeed));
-    return this;
+    return this.accelerateXY(deltaSpeed.x, deltaSpeed.y);
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# death

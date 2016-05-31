@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 
 var KEY = {
   State: {UP:0, DOWN:1},

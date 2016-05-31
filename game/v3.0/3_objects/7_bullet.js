@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.objects.bullets = (function(){
   var bullets = {};
 //______________________________________________________________________________
@@ -66,7 +70,6 @@ Game.objects.bullets = (function(){
     Bullet.prototype.getRenderLayer = function() { return Game.Map.LAYER_OBJ3; };
     getInfo = override(Bullet, 'getInformations', function() {
       var info = getInfo.call(this);
-      if(exists(this.lifeTime)) info.push(["lifeTime : ", this.lifeTime].join(""));
       info.push(["damages : ", this.damages.toString()].join(""));
       return info;
     });

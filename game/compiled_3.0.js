@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Date.now||(Date.now=function(){return(new Date).getTime()});exists(window.Game)||(Game={});
 Game.Manager=function(){GameManager=function(){this.running=!1;this.objects={active:[],toAdd:[],toRemove:[]};this.now=0;this.gameMap=null};GameManager.prototype.setMap=function(b){this.gameMap=b};GameManager.prototype.createMap=function(b,a,e,f){this.gameMap=new Game.Map(b,a,e);this.gameMap.setBgColor(exists(f)?f:"#000")};GameManager.prototype.getMap=function(){return this.gameMap};GameManager.prototype.getObjects=function(b){return b?this.objects.active.filter(b):this.objects.active};var d=function(b,
 a){return a instanceof b};GameManager.prototype.getInstancesOf=function(b){return b?this.getObjects(d.bind(void 0,b)):this.getObjects()};GameManager.prototype.addObject=function(b){this.objects.toAdd.indexOf(-1==b)?this.objects.toAdd.push(b):console.log(Error("the object "+b+" is already being added from the game").stack)};GameManager.prototype.removeObject=function(b){this.objects.toRemove.indexOf(-1===b)?this.objects.toRemove.push(b):console.log(Error("the object "+b+" is already being removed from the game").stack)};

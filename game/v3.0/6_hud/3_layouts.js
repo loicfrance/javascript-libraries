@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.hud.views.Layout = (function(){
   var parent = views.View;
   var Layout = function() {

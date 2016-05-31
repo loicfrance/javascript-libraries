@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.weapons = (function(){
   var weapons= {};
 //______________________________________________________________________________
@@ -65,6 +69,9 @@ Game.weapons = (function(){
 //******************************************************************************
   weapons.Gun = (function(){
     var parent = weapons.Weapon;
+    /**
+     * bulletGenerator : function(damages: Number, position: Vec2, radians: Number).
+     */
     var Gun = function( damages, bulletGenerator, owner ) {
       parent.call(this, damages, owner);
       this.bulletGenerator = bulletGenerator;

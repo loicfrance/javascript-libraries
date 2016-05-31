@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 var Gravity = {
   LEFT   : 1,
   TOP    : 2,

@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.objects.renderers = (function(){
   var result = {};
   result.Renderer = (function(){

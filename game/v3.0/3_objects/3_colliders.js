@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.objects.colliders = (function(){
   var colliders = {};
   var Collider = (function(){

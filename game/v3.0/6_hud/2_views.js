@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.hud.views = {
   STATE: { INACTIVE: 1, NONE: 2, OVERED: 4, PRESSED: 8 },
   EVENT_DESC: { MOVE: 0, ENTER: 1, EXIT: 2, SCROLL: 3, DOWN: 4, UP: 5, CLICK: 6 },

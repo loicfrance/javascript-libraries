@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 if(!window['classExtend']) {
   window['classExtend'] = (parent, child) =>{
     child.prototype = Object.create(parent.prototype);

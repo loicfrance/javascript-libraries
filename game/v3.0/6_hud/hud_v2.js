@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.hud = {};
 game.hud.Manager = (function(){
   var HudManager = function() {

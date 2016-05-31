@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.Map = (function(){
     
   //______________________________________________________________________________
@@ -190,7 +194,8 @@ Game.Map = (function(){
       }
       ctx.restore();
     }
-    if(!this.getHud().getContext()) {
+    var hud = this.getHud();
+    if(hud && !hud.getContext()) {
       ctx.save();
       this.getHud().render(ctx, rect);
       ctx.restore();

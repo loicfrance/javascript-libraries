@@ -1,3 +1,7 @@
+/**
+ * author : Loic France
+ * created 05/31/2016
+ */
 Game.objects.particles = (function(){
   var particles = {};
 //______________________________________________________________________________
@@ -201,10 +205,7 @@ Game.objects.particles = (function(){
     TraceDrawer.prototype.applyOnObject = function( gameManager, object ) {
       var setPosition = object.setPosition;
       var drawer = this;
-      object.setPosition = function() {
-        var x, y;
-        if(arguments.length == 1) { x = arguments[0].x; y = arguments[0].y; }
-        else { x = arguments[0]; y = arguments[1]; }
+      object.setPositionXY = function( x, y ) {
         var pos = object.copyPosition();
         setPosition.call(this, x, y);
         var newPos = object.getPosition();
