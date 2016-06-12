@@ -45,8 +45,7 @@ Game.objects.bullets = (function(){
       }
     });
     Bullet.COLLISION_LAYER = 2;
-    var colLayers = [Bullet.COLLISION_LAYER, Game.objects.Object.COLLISION_LAYER];
-    Bullet.prototype.getCollisionLayers = function() { return colLayers; };
+    Bullet.prototype.collisionLayers = [Bullet.COLLISION_LAYER];
     Bullet.prototype.onCollision = function( gameManager, object ) {
       if(this.launcher == object) return;
       else if(this.damages !== 0) {
@@ -67,7 +66,7 @@ Game.objects.bullets = (function(){
         b.traceDrawer = Bullet.defaultTraceDrawer;
         return b;
     };
-    Bullet.prototype.getRenderLayer = function() { return Game.Map.LAYER_OBJ3; };
+    Bullet.prototype.renderLayer = Game.Map.LAYER_OBJ3;
     getInfo = override(Bullet, 'getInformations', function() {
       var info = getInfo.call(this);
       info.push(["damages : ", this.damages.toString()].join(""));
@@ -150,7 +149,7 @@ Game.objects.bullets = (function(){
           maxAngle = this.maxAngle,
           pos = this.getPosition(),
           dist = 0,
-          targets = gameManager.getObjects(filter.bind(undefined, this.getCollisionLayers())),
+          targets = gameManager.getObjects(filter.bind(undefined, this.collisionLayers)),
           i = targets.length;
       if(i>0)while(i--) {
         if(targets[i] !== this.launcher) {

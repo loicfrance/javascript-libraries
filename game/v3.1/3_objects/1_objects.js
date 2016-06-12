@@ -94,9 +94,18 @@ Game.objects.Object = (function(){
       context2d.fillStyle = '#fff';
       context2d.font ="15px Verdana";
       var infos = this.getInformations();
-      rect.left = rect.right;
-      rect.right = gameManager.getMap().getVisibleRect().right;
-      context2d.wrapText(infos.join('\n'), rect, 15, Gravity.LEFT, true, false);
+      var bigRect = gameManager.getMap().getVisibleRect();
+      var g;
+      if(bigRect.right - rect.right < rect.left - bigRect.left) {
+        rect.right = rect.left;
+        rect.left = bigRect.left;
+        g = Gravity.RIGHT;
+      } else {
+        rect.left = rect.right;
+        rect.right = bigRect.right;
+        g = Gravity.LEFT;
+      }
+      context2d.wrapText(infos.join('\n'), rect, 15, g, true, false);
     }
     context2d.strokeStyle = "#fff";
     (new Circle(this.getPosition(), this.getRenderRadius()*1.1))
@@ -114,9 +123,9 @@ Game.objects.Object = (function(){
   GameObject.prototype.getContextMenu = function() {
     return ""; //dom elements
   };
-  GameObject.prototype.getRenderLayer = function(){return Game.Map.LAYER_OBJ1;};
+  GameObject.prototype.renderLayer = Game.Map.LAYER_OBJ1;
   GameObject.renderLayerFilter = function( layer, obj ) {
-    return obj.getRenderLayer() == layer;
+    return obj.renderLayer == layer;
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# collision
@@ -137,7 +146,6 @@ Game.objects.Object = (function(){
   };
   GameObject.prototype.finishCollision = function() {
     this.collision.collider.finishCollision();
-    //delete this.collision;
   };
   GameObject.prototype.collides = function( obj ) {
     return this.collision.position && obj.collision.position &&
@@ -145,33 +153,39 @@ Game.objects.Object = (function(){
                 this.collision, obj.collision);
   };
   GameObject.prototype.onCollision = function( gameManager, otherObject ) { };
-  GameObject.COLLISION_LAYER = 0;
-  var colLayers = [GameObject.COLLISION_LAYER];
-  GameObject.prototype.getCollisionLayers = function() { return colLayers; };
+  GameObject.COLLISION_LAYER = 1;
+  GameObject.prototype.collisionLayers = [GameObject.COLLISION_LAYER];
   GameObject.prototype.isInLayer = function( layer ) {
-    return this.getCollisionLayers().indexOf(layer) >= 0;
+    return this.collisionLayers.indexOf(layer) >= 0;
   };
   GameObject.getCollisionLayerFilter = (layers, use) =>{
     var len = layers.length;
-    return exists(len)?
-        len > 0 ?
-          use ?
-            obj =>{
-              var i=len, l = obj.getCollisionLayers();
-              while(i-- && l.indexOf(layers[i])==-1) {}
-              return i >= 0;
-            } :
-            obj =>{
-              var i=len, l = obj.getCollisionLayers();
-              while(i-- && l.indexOf(layers[i])==-1) {}
-              return i == -1;
-            } :
-          obj=>!use :
-        use?
-          obj=>obj.getCollisionLayers().indexOf(layers) >= 0 :
-          obj=>obj.getCollisionLayers().indexOf(layers) == -1;
+    if(len>1) {
+      return  use ?
+                obj =>{
+                  var i=len, l = obj.collisionLayers;
+                  while(i-- && l.indexOf(layers[i])==-1) {}
+                  return i >= 0;
+                } :
+                obj =>{
+                  var i=len, l = obj.collisionLayers;
+                  while(i-- && l.indexOf(layers[i])==-1) {}
+                  return i == -1;
+                };
+    } else if(len) {
+      var l = layers[0];
+      return  use?
+                  obj=>obj.collisionLayers.indexOf(l) >= 0 :
+                  obj=>obj.collisionLayers.indexOf(l) == -1;
+    } else return obj=>!use;
   };
-  GameObject.collisionFilter = GameObject.getCollisionLayerFilter(-1, false);
+  GameObject.NO_COLLISION_LAYER = -1;
+  GameObject.collisionFilter = 
+    //*
+    GameObject.getCollisionLayerFilter([-1], false);
+    /*/
+    obj=>obj.collisionLayers[0]!=-1;
+    //*/
 
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# rect, radius, circle

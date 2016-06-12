@@ -32,11 +32,8 @@ Game.objects.particles = (function(){
     Particle.prototype.grow = function( factor) { this.shape.grow(factor); };
     Particle.prototype.canCollide = function(obj) { return false; };
     Particle.prototype.collides = function(obj) { return false; };
-    Particle.prototype.getRenderLayer=function(){return Game.Map.LAYER_PARTCILES;};
-    var colLayers = [-1];
-    Particle.prototype.getCollisionLayers = function() {
-      return colLayers;
-    };
+    Particle.prototype.renderLayer= Game.Map.LAYER_PARTCILES;
+    Particle.prototype.collisionLayers = [Game.objects.Object.NO_COLLISION_LAYER];
     Particle.prototype.prepareCollision = function() {
       console.stack('error : the method \'prepareCollision()\' should not be called for a particle.');
     };
@@ -52,6 +49,7 @@ Game.objects.particles = (function(){
       parent.call(this, lifeTime, shape, color);
     };
     classExtend(parent, StrokedParticle);
+    StrokedParticle.prototype.constructor = parent.prototype.constructor;
     StrokedParticle.prototype.render = function( context2d ) {
       context2d.strokeStyle = this.color;
       this.shape.draw(context2d, false, true);
@@ -68,12 +66,6 @@ Game.objects.particles = (function(){
       //TODO put all these attributes in prototype
       this.rate = rate;
       this.emited = 0;
-      this.minLifeTime = 0.75; this.maxLifeTime = 1.5;
-      this.minAngle = 0; this.maxAngle = Math.PI*2;
-      this.minSpeed = 300; this.maxSpeed = 400;
-      this.speedDampFactor = 2.5;
-      this.reduceSizeFactor = 1.2;
-      this.emitDistance = 0;
       if(max) this.max = max;
       this.particleGenerator = function(lifeTime, initialPosition, angle, speed){
         return new particles.Particle(lifeTime,
@@ -83,6 +75,22 @@ Game.objects.particles = (function(){
       this.emitedParticles = [];
     };
     classExtend(parent, ParticleEmitor);
+    //default attributes :
+    ParticleEmitor.prototype.minLifeTime = 0.75;
+    ParticleEmitor.prototype.maxLifeTime = 1.5;
+    ParticleEmitor.prototype.minAngle = 0;
+    ParticleEmitor.prototype.maxAngle = Math.PI*2;
+    ParticleEmitor.prototype.minSpeed = 300;
+    ParticleEmitor.prototype.maxSpeed = 400;
+    ParticleEmitor.prototype.speedDampFactor = 2.5;
+    ParticleEmitor.prototype.reduceSizeFactor = 1.2;
+    ParticleEmitor.prototype.emitDistance = 0;
+    ParticleEmitor.prototype.particleGenerator = function(lifeTime, initialPosition, angle, speed){
+      return new particles.Particle(lifeTime,
+          new Circle(initialPosition, 5),
+          "#"+Math.round(Math.random()*16777215).toString(16)); // = OxFFFFFF
+    };
+    //functions :
     ParticleEmitor.prototype.restart = function() { this.emited = 0; };
     ParticleEmitor.prototype.stop = function() { this.emited = -1; };
     ParticleEmitor.prototype.isRunning = function() { return this.emited >= 0; };
@@ -125,12 +133,10 @@ Game.objects.particles = (function(){
       { return this.particleGenerator; };
     ParticleEmitor.prototype.setParticleGenerator = function( generator )
       { this.particleGenerator = generator; };
-    var colLayers = [-1]; // particleEmitors do not collide.
-    ParticleEmitor.prototype.getCollisionLayers = function() {
-      return colLayers;
-    };
-    //particlesEmitor are not rendered
-    ParticleEmitor.prototype.getRenderLayer = function() { return Game.Map.LAYER_NONE; };
+    ParticleEmitor.prototype.collisionLayers = [Game.objects.Object.NO_COLLISION_LAYER];
+    // particlesEmitors are not rendered ...
+    ParticleEmitor.prototype.renderLayer = Game.Map.LAYER_NONE;
+    // ... and do not collide.
     ParticleEmitor.prototype.canCollide = function(object) { return false; };
     var onFrame = override(ParticleEmitor, 'onFrame', function( gameManager, dT ) {
       onFrame.call(this, gameManager, dT);
@@ -184,14 +190,18 @@ Game.objects.particles = (function(){
   particles.Explosion = (function(){
     var parent = particles.Emitor;
     var Explosion = function( number ) {
+      //rate = number*1000 particles/second :
+      //to make sure that all particles are created in one frame
       parent.call(this, number*1000, number);
-      // TODO put all thes attributes in the prototype.
-      this.minLifeTime = 0.1; this.maxLifeTime = 0.5;
-      this.minSpeed = 500; this.maxSpeed = 1500;
-      this.speedDampFactor = 2;
-      this.reduceSizeFactor = 3;
     };
     classExtend(parent, Explosion);
+    //default attributes :
+    Explosion.prototype.minLifeTime = 0.1;
+    Explosion.prototype.maxLifeTime = 0.5;
+    Explosion.prototype.minSpeed = 500;
+    Explosion.prototype.maxSpeed = 1500;
+    Explosion.prototype.speedDampFactor = 2;
+    Explosion.prototype.reduceSizeFactor = 3;
     return Explosion;
   })();
 //______________________________________________________________________________
@@ -203,11 +213,11 @@ Game.objects.particles = (function(){
       this.color = color;
     };
     TraceDrawer.prototype.applyOnObject = function( gameManager, object ) {
-      var setPosition = object.setPosition;
+      var setPositionXY = object.setPositionXY;
       var drawer = this;
       object.setPositionXY = function( x, y ) {
         var pos = object.copyPosition();
-        setPosition.call(this, x, y);
+        setPositionXY.call(this, x, y);
         var newPos = object.getPosition();
         if(!pos.equals(newPos))
           drawer.onMove(gameManager, pos, newPos);

@@ -12,6 +12,8 @@ Game.Manager = (function(){
     this.objects = {active:[], toAdd:[], toRemove:[]};
     this.now = 0;
     this.gameMap = null;
+    this.skipFrames = 0;
+    this.framesSkipped = 0;
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# map functions
@@ -69,6 +71,9 @@ Game.Manager = (function(){
     if(!isNull(this.gameEventsListener) && !isNull(this.gameEventsListener.onStop))
       this.gameEventsListener.onStop(this);
   };
+  GameManager.prototype.setSkipFramesNumber = function( skip ) {
+    this.skipFrames = skip;
+  };
   /**
    * the GameEventListener can contain the following functions :
    * - onFrame( gameManager, dT ) :
@@ -118,7 +123,7 @@ Game.Manager = (function(){
           toAdd    = this.objects.toAdd,
           toRemove = this.objects.toRemove;
       var i=toRemove.length;
-      if(i>0)while(i--) {
+      while(i--) {
         obj = toRemove.pop();
         obj.onDeath(this);
         index = active.indexOf(obj);
@@ -126,11 +131,17 @@ Game.Manager = (function(){
           active.splice(index, 1);
         }
       }
-
       var dT = (timeStamp - this.now)/1000;
       if(dT === 0) {
         console.log('error : dT=0');
         return;
+      }
+      if(this.skipFrames) {
+        if(this.framesSkipped < this.skipFrames) {
+          this.framesSkipped++;
+          requestAnimationFrame(this.onFrame.bind(this));
+          return;
+        } else this.framesSkipped = 0;
       }
       this.now = timeStamp;
       if(dT !== 0 && dT < 0.5) {
@@ -144,7 +155,7 @@ Game.Manager = (function(){
           while(i--) {
             obj = bodies.pop();
             other = bodies.filter(Game.objects.Object.getCollisionLayerFilter(
-                                                obj.getCollisionLayers(), true));
+                                                obj.collisionLayers, true));
             j = other.length;
             if(j>0)while(j--) {
               if(obj !== other[j] && obj.canCollide(other[j]) && other[j].canCollide(obj)

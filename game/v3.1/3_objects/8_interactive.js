@@ -27,9 +27,9 @@ Game.objects.interactives = (function(){
         spd.rotate(theta);
         object.setSpeed(spd);
       };
-      Obstacle.COLLISION_LAYER = 1;
-      var colLayers = [Obstacle.COLLISION_LAYER, Game.objects.Object.COLLISION_LAYER];
-      Obstacle.prototype.getCollisionLayers = function() { return colLayers; };
+      Obstacle.COLLISION_LAYER = 0;
+      Obstacle.prototype.collisionLayers = [Obstacle.COLLISION_LAYER/*, Game.objects.Object.COLLISION_LAYER*/];
+      Obstacle.prototype.renderLayer = Game.Map.OBJ1;
       return Obstacle;
     })();
 //______________________________________________________________________________

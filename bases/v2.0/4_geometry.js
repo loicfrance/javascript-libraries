@@ -232,7 +232,7 @@ Rect.prototype.getShape = function() {
 Rect.prototype.toString = function() { return '[' + this.left + ', ' +
     this.top + ', ' + this.right + ', ' + this.bottom + ']';
 };
-Rect.getUnion = function(rects) {
+Rect.getUnion = function( rects ) {
   var i=rects.length;
   if(i) {
     var res = rects[--i].clone();
@@ -244,6 +244,21 @@ Rect.getUnion = function(rects) {
     }
     return res;
   }else return Rect.createEmpty();
+};
+Rect.getIntersection = function( rects ) {
+  var maxLeft, maxTop, minRight, minBottom;
+  var i=rects.length, r;
+  if(i) {
+    while(i--) { r=rects[i];
+      if(r.top > maxTop) maxTop = r.top;
+      if(r.left > maxLeft) maxLeft = r.left;
+      if(r.right < minRight) minRight = r.right;
+      if(r.bottom < minBottom) minBottom = r.bottom;
+    }
+    if(maxLeft < minRight && maxTop < minBottom)
+      return new Rect(maxLeft, maxTop, minRight, minBottom);
+  }
+  return null;
 };
 Rect.createEmpty=_=>new Rect(0,0,0,0);
 Rect.copy=r=>new Rect(r.left, r.top, r.right, r.bottom);
@@ -295,13 +310,10 @@ Shape.prototype.moveTo = function( pos ) {
   return this;
 };
 Shape.prototype.draw = function( context, fill, stroke ) {
-  context.save();
   context.beginPath();
   this.pushPath(context);
   if(fill) context.fill();
   if(stroke) context.stroke();
-  context.closePath();
-  context.restore();
 };
 
 //______________________________________________________________________________
@@ -535,6 +547,7 @@ var Path = function( pointsArray ) {
   if(isNaN(this.center.x)) console.stack(center);
 };
 classExtend(Shape, Path);
+Path.prototype.closed = false;
 Path.prototype.grow = function( factor ) {
   var i=this.points.length;
   if(i>0) while(i--) {
@@ -574,14 +587,17 @@ Path.prototype.mirrorHorizontally = function( axisX ) {
   return this;
 };
 Path.prototype.pushPath = function( context ) {
-  context.translate(this.center.x, this.center.y);
-  context.moveTo(this.points[0].x, this.points[0].y);
   var len = this.points.length;
-  for(var i=1; i< len; i++) {
-    context.lineTo(this.points[i].x, this.points[i].y);
-  }
-  if(this.closed) {
-    context.closePath();
+  if(len) {
+    context.translate(this.center.x, this.center.y);
+    context.moveTo(this.points[0].x, this.points[0].y);
+    for(var i=1; i< len; i++) {
+      context.lineTo(this.points[i].x, this.points[i].y);
+    }
+    if(this.closed) {
+      context.closePath();
+    }
+    context.translate(-this.center.x, -this.center.y);
   }
 };
 Path.prototype.getLines = function() {
@@ -675,9 +691,8 @@ Path.prototype.redefineCenter = function(delta) {
   var i = this.points.length;
   if(!i) return;
   if(delta) {
-    delta = delta.clone().mul(-1);
     while(i--)
-      this.points[i].move(delta);
+      this.points[i].remove(delta);
   }
   else {
     delta = Vec2.zero();
@@ -731,6 +746,16 @@ Polygon.createRectangle = (center, width, height)=> {
     {x: left+width, y: top+height},
     {x: left      , y: top+height}
     ]);
+};
+Polygon.createFromCenter = function(center, pointsArray) {
+  var polygon = new Polygon([]);
+  polygon.moveTo(center);
+  var i = pointsArray.length;
+  polygon.pointsArray = new Array(i);
+  while(i--) {
+    polygon.pointsArray[i] = pointsArray[i].clone();
+  }
+  return polygon;
 };
 
 var RegularPolygon = function( center, radius, pointsNumber, startRadians ) {

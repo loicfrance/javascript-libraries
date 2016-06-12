@@ -20,6 +20,9 @@ Game.weapons = (function(){
     Weapon.prototype.onDeath = function() {
       delete this.damages; if(this.owner) delete this.owner;
     };
+    Weapon.prototype.clone = function() {
+      return new Weapon(this.damages, null);
+    };
     
     Weapon.applyOnClass = function( objectClass ) {
       objectClass.prototype.setWeapon = function( weapon ) {
@@ -86,23 +89,30 @@ Game.weapons = (function(){
     Gun.prototype.use = function( gameManager, position, radians ) {
       gameManager.addObject(this.createBullet(position, radians));
     };
+    Gun.prototype.clone = function() {
+      return new Gun(this.damages, this.bulletGenerator);
+    };
     Gun.defaultBulletValues = {
       renderShape: Game.objects.bullets.Bullet.defaultShape,
       colliderShape: Game.objects.bullets.Bullet.defaultShape,
       color : '#0F0', speed : 300, spawnDistance : 5,// trace : undefined,
-      explosionSize : 0//, lifeTime : undefined
+      explosionSize : 0//, lifeTime : undefined,
     };
     Gun.createBulletGenerator = values =>{
       var v = createProperties(Gun.defaultBulletValues, values);
       return function( damages, position, radians ) {
         var s = Vec2.createFromRadians(radians).mul(v.speed);
+        position = Vec2.createFromRadians(radians).mul(v.spawnDistance).add(position);
         var b = new Game.objects.bullets.Bullet(damages, position, s, v.lifeTime);
         b.renderer = new Game.objects.renderers.Shaped(v.renderShape, v.color);
         b.collider = new Game.objects.colliders.Shaped(v.colliderShape);
         if(radians) b.rotate(radians);
-        if(!isNull(v.trace)) b.traceDrawer = v.trace;
-        if(!isNull(v.explosionSize))
+        if(v.trace) b.traceDrawer = v.trace;
+        if(v.explosionSize) {
           b.explosion = new Game.objects.particles.Explosion(v.explosionSize);
+          if(v.particleGenerator)
+            b.explosion.setParticleGenerator(v.particleGenerator);
+        }
         return b;
       };
     };
@@ -136,7 +146,7 @@ Game.weapons = (function(){
       }
       else shape = new Ray(Vec2.ZERO, 0);
       return function( damages, position, radians ) {
-        if(!isNull(range)) {
+        if(range) {
           var temp = Vec2.createFromRadians(radians).mul(range/2).add(position);
           position = temp;
         }
