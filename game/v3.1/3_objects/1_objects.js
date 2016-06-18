@@ -158,26 +158,22 @@ Game.objects.Object = (function(){
   GameObject.prototype.isInLayer = function( layer ) {
     return this.collisionLayers.indexOf(layer) >= 0;
   };
+  const colFilter1 = (layers, len, obj)=> {
+    var i=len,l=obj.collisionLayers;while(i-- && l.indexOf(layers[i])==-1){}
+    return i>=0;
+  },  colFilter2 = (layers, len, obj)=> {
+    var i=len,l=obj.collisionLayers;while(i-- && l.indexOf(layers[i])==-1){}
+    return i==-1;
+  },  colFilter3 = (l, obj)=>obj.collisionLayers.indexOf(l)>=0,
+      colFilter4 = (l, obj)=>obj.collisionLayers.indexOf(l)==-1;
   GameObject.getCollisionLayerFilter = (layers, use) =>{
     var len = layers.length;
-    if(len>1) {
-      return  use ?
-                obj =>{
-                  var i=len, l = obj.collisionLayers;
-                  while(i-- && l.indexOf(layers[i])==-1) {}
-                  return i >= 0;
-                } :
-                obj =>{
-                  var i=len, l = obj.collisionLayers;
-                  while(i-- && l.indexOf(layers[i])==-1) {}
-                  return i == -1;
-                };
-    } else if(len) {
-      var l = layers[0];
-      return  use?
-                  obj=>obj.collisionLayers.indexOf(l) >= 0 :
-                  obj=>obj.collisionLayers.indexOf(l) == -1;
-    } else return obj=>!use;
+    if(len>1)
+      return use ? colFilter1.bind(null, layers, len):
+                   colFilter2.bind(null, layers, len);
+    else if(len)
+      return use ? colFilter3.bind(null, layers[0]) : colFilter4.bind(null, layers[0]);
+    else return obj=>!use;
   };
   GameObject.NO_COLLISION_LAYER = -1;
   GameObject.collisionFilter = 

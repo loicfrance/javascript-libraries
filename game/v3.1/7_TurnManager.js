@@ -1,5 +1,5 @@
 Game.turn = {};
-Game.turn.TurnManager = (function(){
+Game.turn.Manager = (function(){
   
   /** ========== HOW TO USE TurnManager (TM) ==========
    *  # create the TM with a list of objects : theese objects must have
@@ -31,7 +31,7 @@ Game.turn.TurnManager = (function(){
    */
   var TurnManager = function( objects ) {
     this.objects = objects||[];
-    this.lastIndex = -1;
+    this.lastIndex = -2;
     this.inObjectTurn = false;
     this.running = false;
     this.turnListener = null;
@@ -58,6 +58,9 @@ Game.turn.TurnManager = (function(){
   };
   TurnManager.prototype.getObjectIndex = function( object ) {
     return this.objects.indexOf(object);
+  };
+  TurnManager.prototype.getCurrentObject = function() {
+    return this.objects[this.lastIndex];
   };
   TurnManager.prototype.addObject = function( object ) {
     this.addObjectAt(this.objects.length);
@@ -95,7 +98,7 @@ Game.turn.TurnManager = (function(){
     }
   };
 
-  TurnManager.prototype.onObjectTurnEnd = function() {
+  TurnManager.prototype.onObjectTurnEnd = function(gameManager) {
     this.inObjectTurn = false;
     if(this.turnListener) this.turnListener.onObjectTurnEnd(gameManager, this,
                               this.getObjectAt(this.lastIndex), this.lastIndex);
@@ -111,6 +114,10 @@ Game.turn.TurnManager = (function(){
   };
   TurnManager.prototype.isInObjectTurn = function() {
     return this.inObjectTurn;
+  };
+  TurnManager.turnObjectFilter = (obj)=>obj.onTurn;
+  TurnManager.getTurnObjects = function( gameManager ) {
+    return gameManager.getObjects(TurnManager.turnObjectFilter);
   };
   return TurnManager;
 })();

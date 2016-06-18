@@ -14,44 +14,63 @@ Game.Manager = (function(){
     this.gameMap = null;
     this.skipFrames = 0;
     this.framesSkipped = 0;
+    //this.onFrame = this.onFrame.bind(this);
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# map functions
   GameManager.prototype.setMap = function( gameMap ) {
     this.gameMap = gameMap;
   };
-  GameManager.prototype.createMap = function( canvases, gameWidth, gameHeight, bgColor ) {
+  GameManager.prototype.createMap = function( canvases, gameWidth, gameHeight, bgColor = '#000' ) {
     this.gameMap = new Game.Map( canvases, gameWidth, gameHeight );
-    this.gameMap.setBgColor(exists(bgColor)? bgColor : '#000');
+    this.gameMap.setBgColor(bgColor);
   };
   GameManager.prototype.getMap = function() {
     return this.gameMap;
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# objects array functions (getObjects, addObject, removeObject)
-  GameManager.prototype.getObjects = function( filter ) {
+  GameManager.prototype.getObjects = function( filter = null ) {
     if(filter) return this.objects.active.filter(filter);
     else return this.objects.active;
   };
-  var instanceFilter = function( objClass, obj ){
+  const instanceFilter = function( objClass, obj ){
     return obj instanceof objClass;
   };
   GameManager.prototype.getInstancesOf = function( objectClass ) {
-    return objectClass?
-              this.getObjects(instanceFilter.bind(undefined, objectClass)) :
-              this.getObjects();
+    return this.getObjects(instanceFilter.bind(undefined, objectClass));
   };
   GameManager.prototype.addObject = function( gameObject ) {
     if(this.objects.toAdd.indexOf(gameObject == -1))
-      this.objects.toAdd.push(gameObject);
+      this.addObject_noCheck(gameObject);
     else console.log(new Error("the object " + gameObject +
-                              " is already being added from the game").stack);
+                              " is already being added to the game").stack);
+  };
+  GameManager.prototype.addObject_noCheck = function( gameObject ) {
+    this.objects.toAdd.push(gameObject);
+  };
+  GameManager.prototype.addObjects = function( objects ) {
+    var array = objects.filter(Utils.exclusionFilter.bind(undefined, this.objects.toAdd));
+    this.addObjects_noCheck(array);
+  };
+  GameManager.prototype.addObjects_noCheck = function( objects ) {
+    Array.prototype.push.apply(this.objects.toAdd, objects);
   };
   GameManager.prototype.removeObject = function( gameObject ) {
     if(this.objects.toRemove.indexOf(gameObject === -1))
-      this.objects.toRemove.push(gameObject);
+      this.removeObject_noCheck(gameObject);
     else console.log(new Error("the object " + gameObject +
                               " is already being removed from the game").stack);
+  };
+  GameManager.prototype.removeObject_noCheck = function( gameObject ) {
+    this.objects.toRemove.push(gameObject);
+  };
+  GameManager.prototype.removeObjects = function( objects ) {
+    var array = objects.filter(Utils.exclusionFilter.bind(undefined, this.objects.toRemove));
+    this.removeObjects_noCheck(array);
+  };
+  GameManager.prototype.removeObjects_noCheck = function( objects ) {
+    Array.prototype.push.apply(this.objects.toRemove, objects);
   };
   GameManager.prototype.clearObjects = function() {
     for(var i= this.objects.active.length; i>=0; i--)

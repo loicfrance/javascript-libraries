@@ -75,6 +75,12 @@ Game.Map = (function(){
       this.onWindowResize();
     }
   };
+  /**
+   * listener: function(Game.Map, width, height) : void
+   */
+  GameMap.prototype.setOnResize = function( listener ) {
+    this.resizeListener = listener;
+  };
   GameMap.prototype.setSize = function(width, height, marginH, marginV) {
     var scaleX = width/this.visibleRect.width(),
         scaleY = height/this.visibleRect.height();
@@ -90,6 +96,7 @@ Game.Map = (function(){
       c.canvas.style.marginTop = marginV.toString() + "px";
       c.transform(scaleX, 0, 0, scaleY, 0, 0);
     }
+    if(this.resizeListener) this.resizeListener(this, width, height);
   };
 //______________________________________________________________________________
 //-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-#-# visibleRect, gameRect

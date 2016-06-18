@@ -45,7 +45,7 @@ var Input = {};
       if(!keyState[event.keyCode]) {
         keyState[event.keyCode] = true;
         keyboardListeners.forEach(function( listener ) {
-          listener.onKeyDown(event.keyCode);
+          if(listener.onKeyDown(event.keyCode)) event.preventDefault();
         });
       }
     };
@@ -53,7 +53,7 @@ var Input = {};
       if(keyState[event.keyCode]) {
         keyState[event.keyCode] = false;
         keyboardListeners.forEach(function( listener ) {
-          listener.onKeyUp(event.keyCode);
+          if(listener.onKeyUp(event.keyCode)) e.preventDefault();
         });
       }
     };
@@ -193,19 +193,25 @@ var KeyMap = function() {
   var actions = [];
   var listeners = [];
   var keyListener = {
-    onKeyUp: keyCode => {
-      var a = instance.getAction(keyCode);
-      if(a) listeners.forEach(function( l ) {
-        if(l.thisArg) l.onUp.bind(l.thisArg, a);
-        else l.onUp(a);
-      });
-    },
     onKeyDown: keyCode => {
-      var a = instance.getAction(keyCode);
-      if(a) listeners.forEach(function( l ) {
-        if(l.thisArg) l.onDown.bind(l.thisArg, a);
-        else l.onDown(a);
-      });
+      var a = instance.getAction(keyCode), prevDef = false;
+      if(a) {
+        var len = listeners.length, res;
+        for(var i=0; i<len; i++) {
+          res = listeners[i].onDown(a);
+          if(!prevDef && res) prevDef = true;
+      } }
+      return prevDef;
+    },
+    onKeyUp: keyCode => {
+      var a = instance.getAction(keyCode), prevDef = false;
+      if(a) {
+        var len = listeners.length, res;
+        for(var i=0; i<len; i++) {
+          res = listeners[i].onUp(a);
+          if(!prevDef && res) prevDef = true;
+      } }
+      return prevDef;
     }
   };
   this.setAction = function( keyCode, action ) {

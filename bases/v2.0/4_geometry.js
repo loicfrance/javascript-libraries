@@ -224,6 +224,12 @@ Rect.prototype.height = function() { return this.bottom - this.top; };
 Rect.prototype.ratio  = function() { return this.width() / this.height(); };
 Rect.prototype.perimeter = function(){return 2*this.width() + 2*this.height();};
 Rect.prototype.area = function() { return this.width()*this.height(); };
+Rect.prototype.getCurvePercentPoint = function( percent ) {
+  if((percent%=1) < 0.25) return new Vec2(this.left+percent*4*this.width(), this.top);
+  if(percent < 0.5 ) return new Vec2(this.right, this.top+(percent*4-1)*this.height());
+  if(percent < 0.75) return new Vec2(this.right-(percent*4-2)*this.width(), this.bottom);
+  return new Vec2(this.left, this.bottom-(percent*4-3)*this.height());
+};
 Rect.prototype.getShape = function() {
   return new Polygon(Vec2.createVec2Array(
     [this.left,this.top,  this.right,this.top,
@@ -286,6 +292,7 @@ Shape.prototype.copyCenter= function() { return this.center.clone(); };
 Shape.prototype.intersect = function( shape ) { return false; };
 Shape.prototype.contains  = function( point ) { return false; };
 Shape.prototype.getRect   = function() { return Rect.createFromPoint(this.center); };
+Shape.prototype.getCurvePercentPoint=function( percent ) { return this.center; };
 Shape.prototype.getRadius = function() { return 0; };
 Shape.prototype.perimeter = function() { return 0; };
 Shape.prototype.area      = function() { return 0; };
@@ -349,6 +356,9 @@ Circle.prototype.contains = function( point ) {
 Circle.prototype.getRect = function() {
   return new Rect(this.center.x - this.radius, this.center.y - this.radius,
                   this.center.x + this.radius, this.center.y + this.radius);
+};
+Circle.prototype.getCurvePercentPoint = function( p ) {
+  return Vec2.createFromRadians(p*Math.PI*2).mul(this.radius).add(this.center);
 };
 Circle.prototype.getRadius = function() { return this.radius; };
 Circle.prototype.getCircle = function() {
@@ -475,6 +485,9 @@ Line.prototype.getRect = function() {
   if(p0.y < p1.y) { top = p0.y; bottom = p1.y; }
   else            { top = p1.y; bottom = p0.y; }
   return new Rect(left, top, right, bottom);
+};
+Line.prototype.getCurvePercentPoint = function(p) {
+  return this.getP0().mul(p).add(this.getP1().mul(1-p));
 };
 Line.prototype.getRadius = function() { return this.length/2; };
 Line.prototype.perimeter = function() { return this.length*2; };
@@ -680,6 +693,18 @@ Path.prototype.getRect = function() {
   rect.move(this.center);
   return rect;
 };
+Path.prototype.getCurvePercentPoint = function( p ) {
+  var dist = this.perimeter()*p;
+  var lines = this.getLines(), len=lines.length, l;
+  for(var i=0; i< len; i++) {
+    l=lines[i].length;
+    if(l>dist) {
+      return lines[i].getCurvePercentPoint(dist/l);
+    }
+    else dist-=l;
+  }
+  return this.points[i].add(this.center);
+};
 Path.prototype.getRadius = function() {
   var r = 0, mag;
   for(var i=this.points.length-1; i>= 0; i--) {
@@ -763,15 +788,16 @@ var RegularPolygon = function( center, radius, pointsNumber, startRadians ) {
   var angle = startRadians;
   this.center = center.clone();
   this.points = new Array(pointsNumber);
-  var i=pointsNumber;
   var rLen = radius.length;
   if(exists(rLen)) {
-    while(i--) {
+    let i=-1;
+    while(i++<pointsNumber) {
       this.points[i] = Vec2.createFromRadians(angle).mul(radius[i%rLen]);
       angle += dR;
     }
   }
   else {
+    let i=pointsNumber;
     while(i--) {
       this.points[i] = Vec2.createFromRadians(angle).mul(radius);
       angle += dR;

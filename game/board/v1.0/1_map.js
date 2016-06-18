@@ -18,6 +18,7 @@ Game.board.Map = (function(){
     this.boardMarginRight = this.boardMarginBottom = 0;
   };
   classExtend(parent, BoardMap);
+//---------- map dimensions part ----------
   BoardMap.prototype.getHorizontalCases = function() {
     return this.horizontalCases;
   };
@@ -84,6 +85,7 @@ Game.board.Map = (function(){
     var left = boardRect.left + caseW*caseX, top = boardRect.top + caseH*caseY;
     return new Rect(left, top, left+caseW, top+caseH);
   };
+// ---------- debug part ----------
   BoardMap.prototype.renderDebug = function( context ) {
     var rect = this.getBoardRect();
     context.strokeStyle = '#F00';
@@ -131,9 +133,12 @@ Game.board.Map = (function(){
         }
       }
     }
-    
-    
   });
+//---------- map occupation part ----------
+  BoardMap.boardObjectFilter = (obj)=>obj.addOccupationToMap;
+  BoardMap.prototype.getBoardObjects = function( gameManager ) {
+    return gameManager.getObjects(BoardMap.boardObjectFilter);
+  };
   BoardMap.prototype.getObjectsAtCase = function( boardRect, objects, caseX, caseY ) {
     var i=objects.length, obj, objX, objY, occupMat, width, height, caseI, caseJ;
     var result = [];
@@ -146,12 +151,91 @@ Game.board.Map = (function(){
       if(caseJ >= 0 && caseJ < height) {
         width=occupMat[caseJ].length;
         caseI = Math.floor(width/2)+caseX-objX;
-        if(caseI >= 0 && caseI < width && occupMat[caseJ][caseI])
+        if(caseI >= 0 && caseI < width && (+occupMat[caseJ][caseI]))
           result.push(obj);
       }
       
     }
     return result;
   };
+  BoardMap.prototype.getNativeOccupationMap = function() {
+    var h=this.getVerticalCases(), w = this.getHorizontalCases();
+    var map = new Array(h), i=h, j;
+    while(i--) {
+      map[i] = new Array(w);
+      j=w;
+      while(j--) map[i][j]=0;
+    }
+    return map;
+  };
+  BoardMap.prototype.getOccupationMap = function( objects ) {
+    var map = this.getNativeOccupationMap();
+    var i=objects.length;
+    while(i--) objects[i].addOccupationToMap(map);
+    return map;
+  };
+//---------- path-finding part ----------
+  BoardMap.prototype.getDistanceMap = function( occupationMap, x, y ) {
+    var h = occupationMap.length, w = occupationMap[0].length,
+        i, j, minI=y, maxI=y, minJ=x, maxJ=x,next,
+        ok=false, res = new Array(h);
+    for(i=0; i<h; i++) {
+      res[i] = new Array(w);
+      for(j=0; j<w; j++) {
+        res[i][j] = -1;
+      }
+    }
+    res[y][x] = 0;
+    while(!ok) {
+      ok= true;
+      for(i=minI; i<=maxI; i++) {
+        for(j=minJ; j<=maxJ; j++) {
+          if(res[i][j]>=0) {
+            next = res[i][j]+1;
+            if(i>0   && (res[i-1][j]==-1|| res[i-1][j]>next) && !occupationMap[i-1][j]) {
+              res[i-1][j] = next; if(i==minI) minI--; ok = false; }
+            if(i<h-1 && res[i+1][j]==-1 && !occupationMap[i+1][j]) {
+              res[i+1][j] = next; if(i==maxI) maxI++; ok = false; }
+            if(j>0   && res[i][j-1]==-1 && !occupationMap[i][j-1]) {
+              res[i][j-1] = next; if(j==minJ) minJ--; ok = false; }
+            if(j<w-1 && res[i][j+1]==-1 && !occupationMap[i][j+1]) {
+              res[i][j+1] = next; if(j==maxJ) maxJ++; ok = false; }
+    } } } }
+    return res;
+  };
+  BoardMap.prototype.getPath = function( distanceMapFromTarget, xi, yi, xf, yf ) {
+    let dMap = distanceMapFromTarget,
+        result = [], x=xi, y=yi, min, minX=x, minY=y, w=dMap[0].length, h=dMap.length,
+        point = new Vec2(xf, yf), dist = Vec2.squareDistance(new Vec2(x,y),point);
+    let setNew=(x,y)=> {
+          min=dMap[y][x]; minX = x; minY = y;
+          dist = Vec2.squareDistance(new Vec2(x,y),point);
+        }, compareDist=(x, y)=>dMap[y][x]<min||
+          (dMap[y][x]==min&&Vec2.squareDistance(new Vec2(x, y), point) < dist);
+    
+    while(dMap[y][x]) {
+      min = dMap[y][x]==-1 ? Number.MAX_SAFE_INTEGER : dMap[y][x];
+      if(x>0 && dMap[y][x-1]!=-1 && compareDist(x-1, y))
+        setNew(x-1, y);
+      if(x<w-1 && dMap[y][x+1]!=-1 && compareDist(x+1, y))
+        setNew(x+1, y);
+      if(y>0 && dMap[y-1][x]!=-1 && compareDist(x, y-1))
+        setNew(x, y-1);
+      if(y<h-1 && dMap[y+1][x]!=-1 && compareDist(x, y+1))
+        setNew(x, y+1);
+      if(minX != x || minY != y) {
+        x = minX;
+        y = minY;
+        result.push(x, y);
+      } else break;
+    }
+    return result;
+  };
+  BoardMap.prototype.findPath = function( gameManager, xi, yi, xf, yf ) {
+    return this.getPath(this.getDistanceMap(
+            this.getOccupationMap(this.getBoardObjects(gameManager)),
+            xf, yf), xi, yi, xf, yf);
+  };
   return BoardMap;
 })();
+

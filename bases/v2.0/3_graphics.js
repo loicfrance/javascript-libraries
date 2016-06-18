@@ -44,12 +44,12 @@ var Gravity = {
     else if(isNaN(bottom)) bottom = top    + height;
     return new Rect(left, top, right, bottom);
   },
-  getHorizontalGravity: function(g, defaultG) {
+  getHorizontalGravity: function(g, defaultG = null) {
     return (g&Gravity.LEFT)? Gravity.LEFT : (g&Gravity.RIGHT)? Gravity.RIGHT :
            (g&Gravity.CENTER)? Gravity.CENTER :
            defaultG? defaultG : Gravity.LEFT;
   },
-  getVerticalGravity: function(g, defaultG) {
+  getVerticalGravity: function(g, defaultG = null) {
     return (g&Gravity.TOP)? Gravity.TOP : (g&Gravity.BOTTOM)? Gravity.BOTTOM :
            (g&Gravity.CENTER)? Gravity.CENTER :
            defaultG? defaultG : Gravity.TOP;
@@ -57,7 +57,7 @@ var Gravity = {
 };
 
 if(!CanvasRenderingContext2D.prototype.wrapText) {
-  CanvasRenderingContext2D.prototype.wrapText = function( text, rect, lineHeight, textGravity, fill, stroke ) {
+  CanvasRenderingContext2D.prototype.wrapText = function( text, rect, lineHeight, textGravity, fill = true, stroke = false ) {
     var paragraphs = text.split('\n');
     var parLen = paragraphs.length;
     var lines = [], line;
@@ -69,26 +69,29 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
     var n;
     for(var i=0; i<parLen; i++) {
       words = paragraphs[i].split(' ');
-      line='';
       len = words.length;
-      for(n = 0; n < len; n++) {
-        testLine = line + words[n];
+      if(!len) {
+        lines.push(paragraphs[i]);
+        linesX.push(0);
+        continue;
+      }
+      line=words[0];
+      for(n = 1; n < len; n++) {
+        testLine = line + ' ' +words[n];
         metrics = this.measureText(testLine);
         width = metrics.width;
         if (width > rectWidth && n > 0) {
           lineX = rect.left;
           if(!(textGravity & Gravity.LEFT)) {
-            metrics = this.measureText(line);
-            width = metrics.width;
-            if(textGravity & Gravity.RIGHT) lineX += rectWidth-width;
-            else lineX += (rectWidth-width)/2;
+            if(textGravity & Gravity.RIGHT) lineX += this.measureText(line).width-width;
+            else if(textGravity & Gravity.CENTER) lineX += (this.measureText(line).width-width)/2;
           }
           lines.push(line);
-          line = words[n] + ' ';
+          line = words[n];
           linesX.push(lineX);
         }
         else {
-          line = testLine + ' ';
+          line = testLine;
         }
       }
       lineX = rect.left;
@@ -96,17 +99,16 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
         metrics = this.measureText(line);
         width = metrics.width;
         if(textGravity & Gravity.RIGHT) lineX += rectWidth-width;
-        else lineX += (rectWidth-width)/2;
+        else if(textGravity & Gravity.CENTER) lineX += (rectWidth-width)/2;
       }
       lines.push(line);
       linesX.push(lineX);
     }
     len = lines.length;
-    var y = rect.top+lineHeight/2;
+    var y = rect.top+lineHeight;
     if(!(textGravity & Gravity.TOP)) {
-      var h = lineHeight*len;
-      if(textGravity & Gravity.BOTTOM) y += rect.height()-h;
-      else y += (rect.height()-h)/2;
+      if(textGravity & Gravity.BOTTOM) y = rect.bottom-lineHeight*(len-1);
+      else if(textGravity & Gravity.CENTER) y += (rect.height()-lineHeight*len)/2;
     }
     for(n=0; n<len; n++) {
       if(fill)   this.fillText  (lines[n], linesX[n], y);

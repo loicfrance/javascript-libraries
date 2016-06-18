@@ -61,20 +61,20 @@ Game.objects.particles = (function(){
 //******************************************************************************
   particles.Emitor = (function(){
     var parent = Game.objects.Object.Static;
-    var ParticleEmitor = function( rate, max ) {
+    var ParticleEmitor = function( rate, max=0 ) { //max=0 : no maximum
       parent.call(this);
       //TODO put all these attributes in prototype
       this.rate = rate;
       this.emited = 0;
       if(max) this.max = max;
-      this.particleGenerator = function(lifeTime, initialPosition, angle, speed){
-        return new particles.Particle(lifeTime,
-            new Circle(initialPosition, 5),
-            "#"+Math.round(Math.random()*16777215).toString(16)); // = OxFFFFFF
-      };
       this.emitedParticles = [];
     };
     classExtend(parent, ParticleEmitor);
+    ParticleEmitor.standardGenerator = function(lifeTime, initialPosition, angle, speed){
+      return new particles.Particle(lifeTime,
+          new Circle(initialPosition, 5),
+          "#"+Math.round(Math.random()*16777215).toString(16)); // = OxFFFFFF
+    };
     //default attributes :
     ParticleEmitor.prototype.minLifeTime = 0.75;
     ParticleEmitor.prototype.maxLifeTime = 1.5;
@@ -85,11 +85,7 @@ Game.objects.particles = (function(){
     ParticleEmitor.prototype.speedDampFactor = 2.5;
     ParticleEmitor.prototype.reduceSizeFactor = 1.2;
     ParticleEmitor.prototype.emitDistance = 0;
-    ParticleEmitor.prototype.particleGenerator = function(lifeTime, initialPosition, angle, speed){
-      return new particles.Particle(lifeTime,
-          new Circle(initialPosition, 5),
-          "#"+Math.round(Math.random()*16777215).toString(16)); // = OxFFFFFF
-    };
+    ParticleEmitor.prototype.particleGenerator = ParticleEmitor.standardGenerator;
     //functions :
     ParticleEmitor.prototype.restart = function() { this.emited = 0; };
     ParticleEmitor.prototype.stop = function() { this.emited = -1; };
@@ -108,9 +104,9 @@ Game.objects.particles = (function(){
       { return this.emitDistance; };
     ParticleEmitor.prototype.setEmitRate=function(rate) { this.rate = rate; };
     ParticleEmitor.prototype.getEmitRate=function() { return this.rate; };
-    ParticleEmitor.prototype.setLifeTime=function(min, max) {
+    ParticleEmitor.prototype.setLifeTime=function(min, max=0) { // max=0||max<min : max = min
       this.setMinLifeTime(min);
-      this.setMaxLifeTime(max ? ((max>min)? max : min) : min);
+      this.setMaxLifeTime(max<min ? min : max);
     };
     ParticleEmitor.prototype.setMinLifeTime=function(mlt){this.minLifeTime=mlt;};
     ParticleEmitor.prototype.setMaxLifeTime=function(mlt){this.maxLifeTime=mlt;};
@@ -138,48 +134,66 @@ Game.objects.particles = (function(){
     ParticleEmitor.prototype.renderLayer = Game.Map.LAYER_NONE;
     // ... and do not collide.
     ParticleEmitor.prototype.canCollide = function(object) { return false; };
+    ParticleEmitor.prototype.createParticle = function( lifeTime, position, angle, speed) {
+      p = this.particleGenerator(lifeTime, position, angle, speed);
+      if(speed) {
+        var unit = Vec2.createFromRadians(angle);
+        if(this.emitDistance)
+          p.move(unit.clone().mul(this.emitDistance));
+        p.speed = unit.mul(speed);
+      } else if(this.emitDistance) {
+        p.move(Vec2.createFromRadians(angle).mul(this.emitDistance));
+      }
+      return p;
+    };
+    ParticleEmitor.prototype.createParticles = function( number ) {
+      var lt/*lifeTime*/, spd/*speed*/, a/*angle*/, pos=this.getPosition(),
+          res = new Array(number);
+      while(number--) {
+        lt = this.maxLifeTime==this.minLifeTime ? this.minLifeTime :
+            Math.random()*(this.maxLifeTime-this.minLifeTime)+this.minLifeTime;
+        spd = this.maxSpeed==this.minSpeed ? this.minSpeed :
+            Math.random()*(this.maxSpeed-this.minSpeed)+this.minSpeed;
+        a = this.maxAngle==this.minAngle ? this.minAngle :
+            Math.random()*(this.maxAngle-this.minAngle)+this.minAngle;
+        
+        res[number] = this.createParticle(lt, pos, a, spd);
+      }
+      return res;
+    };
+    ParticleEmitor.prototype.onFinished = function(gameManager) {
+      this.kill(gameManager);
+    };
     var onFrame = override(ParticleEmitor, 'onFrame', function( gameManager, dT ) {
       onFrame.call(this, gameManager, dT);
-      var i=this.emitedParticles.length;
-      var speedFactor = Math.max(0, 1-this.speedDampFactor*dT);
-      var sizeFactor = Math.max(0, 1-this.reduceSizeFactor*dT);
-      if(i>0)while(i--) {
-        if(this.emitedParticles[i].lifeTime <= 0) this.emitedParticles.splice(i, 1);
-        else {
-          if(this.emitedParticles[i].speed && speedFactor !== 1)
-            this.emitedParticles[i].speed.mul(speedFactor);
-          if(sizeFactor !== 1) this.emitedParticles[i].grow(sizeFactor);
+      var len=this.emitedParticles.length,
+          speedFactor = Math.max(0, 1-this.speedDampFactor*dT),
+          sizeFactor = Math.max(0, 1-this.reduceSizeFactor*dT);
+      if(len) {
+        var i=len;
+        while(i--) {
+          if(this.emitedParticles[i].lifeTime <= 0) this.emitedParticles.splice(i, 1);
+          //kill() is automatically called for the particle by the lifeTime property.
+          else {
+            if(this.emitedParticles[i].speed && speedFactor !== 1)
+              this.emitedParticles[i].speed.mul(speedFactor);
+            if(sizeFactor !== 1) this.emitedParticles[i].grow(sizeFactor);
+          }
         }
-      }
-      if(this.max && this.emitedParticles.length === 0 && this.emited >= this.max)
-          this.kill(gameManager);
+        if(this.particlePositionRelative && this.speed && !this.speed.isZero()) {
+          var d = this.speed.clone().mul(dT);
+          i=len;
+          while(i--) this.emitedParticles[i].shape.move(d);
+        }
+      } else if(this.max && this.emited >= this.max) this.onFinished(gameManager);
+      
       if(this.emited > -1 && (!this.max || this.emited < this.max)) {
         var next = this.emited + dT*this.rate;
-        if(this.max)
-          if(next> this.max) next = this.max;
-        i = Math.floor(next - Math.floor(this.emited));
+        if(this.max && next> this.max) next = this.max;
+        var p = this.createParticles(Math.floor(next - Math.floor(this.emited)));
         this.emited = next;
-        if(i>0)while(i--) {
-          var lifeTime = Math.random()*(this.maxLifeTime-this.minLifeTime)
-                                                              + this.minLifeTime;
-          var speed = Math.round(Math.random()*(this.maxSpeed-this.minSpeed)
-                                                               + this.minSpeed);
-          var p;
-          if(speed > 0) {
-            var angle=Math.random()*(this.maxAngle-this.minAngle)+this.minAngle;
-            p = this.particleGenerator(lifeTime, this.position, angle, speed);
-            if(this.emitDistance)
-              p.move(Vec2.createFromRadians(angle).mul(this.emitDistance));
-            p.speed = new Vec2(Math.cos(angle)*speed, Math.sin(angle)*speed);
-          } else p = this.particleGenerator(lifeTime, this.position, 0, 0);
-          this.emitedParticles.push(p);
-          gameManager.addObject(p);
-        }
-      }
-      if(this.particlePositionRelative && this.speed && !this.speed.isZero()) {
-        var d = this.speed.clone().mul(dT);
-        i=this.emitedParticles.length;
-        if(i>0)while(i--) this.emitedParticles[i].shape.move(d);
+        Array.prototype.push.apply(this.emitedParticles, p);
+        gameManager.addObjects_noCheck(p);
       }
     });
     return ParticleEmitor;
