@@ -19,20 +19,12 @@ Utils['intersectionFilter'] = (array, x)=> {
 Utils['exclusionFilter'] = (array, x)=> {
   return array.indexOf(x)==-1;
 };
-if(!window['classExtend']) {
-  window['classExtend'] = (parent, child) =>{
-    child.prototype = Object.create(parent.prototype);
-    child.prototype.constructor = child;
-    child.super = parent.prototype;
-  };
-}
-if(!window['override']) {
-  window['override'] = ( _class, functionName, newFunction) => {
-    _super = _class.prototype[functionName];
-    _class.prototype[functionName] = newFunction;
-    return _super;
-  };
-}
+Utils['randomColor'] = _=>"#"+Math.round(Math.random()*16777215).toString(16);
+Function.prototype['override'] = function( functionName, newFunction ) {
+  _super = this.prototype[functionName];
+  this.prototype[functionName] = newFunction;
+  return _super;
+};
 if(!window['exists']) window['exists'] = a => a !== undefined;
 if(!window['isNull']) window['isNull'] = a => a === undefined || a === null;
 
@@ -62,7 +54,7 @@ console.deprecated = ( str ) =>{
   console.stack('deprecated : ' + str);
 };
 console.map = ( map, separationChar='' )=> {
-  for(var i=0; i< map.length; i++) {
+  for(let i=0; i< map.length; i++) {
     if(map[i].join) console.log(map[i].join(separationChar));
     else console.log(map[i]);
   }

@@ -21,18 +21,18 @@ Game.Physics = (function(){
         object.setMass = function( mass ) { this.mass = mass; };
         object.getMass = function() { return this.mass; };
         object.applyForce = function( force ) {
-          var da = new Vec2(force).mul(this.getMass());
+          let da = force.clone().mul(this.getMass());
           da.add(this.copyAcceleration());
           this.setAcceleration(da);
         };
       },
       hasMass: ( obj )=> exists(obj.getMass),
       elasticCollision: function( obj1, obj2 ) { // not perfect at all.
-        var m1 = this.hasMass(obj1)? obj1.getMass() : 1,
+        let m1 = this.hasMass(obj1)? obj1.getMass() : 1,
             m2 = this.hasMass(obj2)? obj2.getMass() : 1,
             pos1 = obj1.getPosition(), spd1 = obj1.getSpeed(),
-            pos2 = obj2.getPosition(), spd2 = obj2.getSpeed();
-        var k = Vec2.translation(pos1, pos2)
+            pos2 = obj2.getPosition(), spd2 = obj2.getSpeed(),
+            k = Vec2.translation(pos1, pos2)
                                         .mul(Vec2.distance(spd1, spd2)/(m1+m2));
         obj1.setSpeed(k.clone().mul(m2));
         obj2.setSpeed(k.mul(m1));

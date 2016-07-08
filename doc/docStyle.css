@@ -1,0 +1,114 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12pt;
+  color: rgba(0, 0, 0, 0.68);
+  background-color: white;
+  padding: 10px;
+  max-width: 1000px;
+  margin:auto;
+}
+h1,h2,h3 {
+  color: rgba(0, 0, 0, 0.87);
+}
+h1 { /* for classes names */
+  background-color: #2196F3;
+  color: white;
+  font-size: 44px;
+  line-height: 56px;
+  font-weight: 400;
+  margin: 0;
+  padding: 24px 0 12px;
+}
+h2 {
+  margin-top: 50px;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 32px;
+}
+h3 {
+  margin:0px;
+  padding:0px;
+  font-size: 24px;
+  font-weight: 400;
+}
+hr {
+  width: 90%;
+  margin:0px;
+  border:0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+}
+hr.sections {
+  background: rgba(0, 0, 0, 0.3);
+  height: 1px;
+  width:95%;
+}
+::-webkit-selection { background-color: #0099cc; color: #fff; }
+::-moz-selection    { background-color: #0099cc; color: #fff; }
+::selection         { background-color: #0099cc; color: #fff; }
+:target {
+  -webkit-animation: blinking 1s;
+  -moz-animation: blinking 1s;
+  animation: blinking 1s;
+}
+a {
+  text-decoration: none;
+  color:#2196F3;
+}
+a:hover {
+  color:#64B5F6;
+}
+a.external {
+  margin-left: 20px;
+}
+table {
+  width: 100%;
+  text-align: left;
+  margin: 5px;
+  border-collapse: collapse;
+  border: 1px solid #E0E0E0;
+  background-color: #F5F5F5;
+}
+table td:last-child {
+  width: 99%;
+  white-space: initial;
+}
+table td {
+  padding: 2px 5px;
+  white-space: nowrap;
+  border: 1px solid #E0E0E0;
+  min-width: 30pt;
+}
+table thead th {
+  background-color: #9E9E9E;
+  color: white;
+  padding: 2px 5px;
+}
+table thead td {
+  color: white;
+  padding: 2px 5px;
+  border: 1px solid white;
+  border-top-style: none;
+  border-bottom-style: none
+}
+code {
+  font-family: monospace;
+  background: #E0E0E0;
+  padding: 1px 3px;
+}
+table thead td:first-child { border-left-style: none; }
+table thead td:last-child { border-right-style: none; }
+
+
+@keyframes blinking {
+	from { background:#f4a83d }
+	to { background:rgba(244,168,61,0) }
+}
+@-webkit-keyframes blinking {
+	from { background:#f4a83d }
+	to { background:rgba(244,168,61,0) }
+}
+@-moz-keyframes blinking {
+	from { background:#f4a83d }
+	to { background:rgba(244,168,61,0) }
+}

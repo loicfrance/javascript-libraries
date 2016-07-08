@@ -60,7 +60,7 @@ Game.hud.Hud = (function(){
   Hud.prototype.mouseMove = function( position ) {
     if(this.active) {
       var rect, view, done=false,
-          evt= {description: Game.hud.views.EVENT_DESC.MOVE, position: Vec2.zero()};
+          evt= {description: Game.hud.views.EVENT_DESC.MOVE, position: Vec2.zero};
       if(this.currentView) {
         if(this.currentView.hasFocus()){
           evt.position.set(position).addXY(-rect.left, -rect.top);

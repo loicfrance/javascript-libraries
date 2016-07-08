@@ -14,7 +14,7 @@ Game.objects.Follower = (function(){
     this.steerForce = exists(steerForce)? steerForce : maxSpeed;
     this.setTarget(target);
   };
-  classExtend(parent, Follower);
+  Utils.classExtend(parent, Follower);
   Game.objects.properties.Homing.applyOnClass(Follower);
 // = = = = = = = = = = = = = = = = = =public = = = = = = = = = = = = = = = = = =
 // - - - - - - - - - - - - - - - - - -methods- - - - - - - - - - - - - - - - - -
@@ -38,7 +38,7 @@ Game.objects.Vehicle = (function() {
     this.setRotationFieldEnabled(true);
     this.speed = 0;
   };
-  classExtend(parent, Vehicle);
+  Utils.classExtend(parent, Vehicle);
   Vehicle.prototype.moveOnFrame = function( gameManager, dT ) {
     if(this.speed) this.move(this.copySpeed().mul(dT));
   };

@@ -29,10 +29,10 @@ var Gravity = {
     }
     var left=NaN, top=NaN, right=NaN, bottom=NaN;
     if(gravity & Gravity.CENTER) {
-      left   = availableRect.left   + (availableRect.width ()-width)/2;
-      top    = availableRect.top    + (availableRect.height()-height)/2;
-      right  = availableRect.right  - (availableRect.width ()-width)/2;
-      bottom = availableRect.bottom - (availableRect.height()-height)/2;
+      left   = availableRect.left   + (availableRect.width -width)/2;
+      top    = availableRect.top    + (availableRect.height-height)/2;
+      right  = availableRect.right  - (availableRect.width -width)/2;
+      bottom = availableRect.bottom - (availableRect.height-height)/2;
     }
     if(gravity & Gravity.LEFT   !== 0) left = availableRect.left;
     if(gravity & Gravity.TOP    !== 0) top = availableRect.top;
@@ -65,7 +65,7 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
     var words, len;
     var testLine;
     var metrics;
-    var width=0; var rectWidth = rect.width();
+    var width=0; var rectWidth = rect.width;
     var n;
     for(var i=0; i<parLen; i++) {
       words = paragraphs[i].split(' ');
@@ -108,7 +108,7 @@ if(!CanvasRenderingContext2D.prototype.wrapText) {
     var y = rect.top+lineHeight;
     if(!(textGravity & Gravity.TOP)) {
       if(textGravity & Gravity.BOTTOM) y = rect.bottom-lineHeight*(len-1);
-      else if(textGravity & Gravity.CENTER) y += (rect.height()-lineHeight*len)/2;
+      else if(textGravity & Gravity.CENTER) y += (rect.height-lineHeight*len)/2;
     }
     for(n=0; n<len; n++) {
       if(fill)   this.fillText  (lines[n], linesX[n], y);

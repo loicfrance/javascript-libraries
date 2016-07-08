@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="doc.xsl"?>
+<doc>
+  <!--head></head-->
+  <external-link name="number"
+    href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Number"/>
+  <external-link name="string"
+    href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/String"/>
+  <external-link name="Array"
+    href="https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Array"/>
+  <external-link name="CanvasRenderingContext2D"
+    href="https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D"/>
+
+<!--############################################################################
+##################################### Vec2 #####################################
+#############################################################################-->
+<class name="Vec2">
+  A simple class with two members : x and y,
+  used to represent points and vectors
+  <field visibility="public" type="number" name="x">x coordinate</field>
+  <field visibility="public" type="number" name="y">y coordinate</field>
+  <field const="true" type="Vec2" name="ZERO">
+    <brief>(0,0)</brief>
+    (x:0, y:0). Make sure you do not modify this constant.
+  </field>
+  <constructor visibility="public">
+    Standard and {@b only} constructor. sets both coordinates to the given
+    {@param x} and {@param y} values
+    <param type="number" name="x">x coordinate</param>
+    <param type="number" name="y">y coordinate</param>
+  </constructor>
+
+  <property type="number" setter="false" name="squareMagnitude"/>
+  <property type="number" name="magnitude" />
+  <property type="number" name="angle" />
+  <property specification="static" type="Vec2" setter="false" name="zero"/>
+
+  <method name="clone" return="Vec2">
+    <return type="Vec2">a Vec2 with the same x and y attributes</return>
+  </method>
+  <method name="setXY" return="this"> sets x and y properties
+    to the given values
+    <param type="number" name="x">the new x coordinate</param>
+    <param type="number" name="y">the new y coordinate</param>
+  </method>
+  <method name="raz" return="this">sets x and y coordinates to 0</method>
+  <method name="set" return="this">
+    sets x and y coordinates to the same as the parameter
+    <param type="Vec2" name="vec" />
+  </method>
+  <method name="addXY" return="this">
+    adds x and y parameter to x and y attributes
+    <param type="number" name="x">number to add to the x attribute</param>
+    <param type="number" name="y">number to add to the y attribute</param>
+  </method>
+  <method name="add" return="this">
+    adds x and y attributes of the parameter to x and y attribute of this Vec2.
+    <param type="Vec2" name="vec" />
+  </method>
+  <method name="remove" return="this">
+    removes x and y attributes of the parameter from x and y attribute
+    of this Vec2.
+    <param type="Vec2" name="vec" />
+  </method>
+  <method name="mul" return="this">
+    multiplies x and y coordinates by the parameter value
+    <param type="number" name="factor" />
+  </method>
+  <method name="normalize" return="this"> sets the magnitude of the object to 1
+    by multiplying x and y attributes by the inverse of the magnitude.
+  </method>
+  <method name="setMagnitude" return="this">
+    sets the magnitude of the object to the value of the parameter.
+    <param type="number" name="mag">new magnitude</param>
+  </method>
+  <method name="setAngle" return="this">
+    sets the angle of the object to the value of the parameter,
+    and keep the magnitude.
+    <param type="number" name="a">new angle (in radians)</param>
+  </method>
+  <method name="rotate" return="this">
+    rotate the Vec2. same as {@code vec2.radians += a;}
+    <param type="number" name="a">angle (in radians)</param>
+  </method>
+  <method name="rotateAround" return="this">
+    rotate this Vec2 around the center, and keep the distance to the center
+    <param type="number" name="a">angle (in radians) to rotate this Vec2</param>
+    <param type="Vec2" name="center">center to rotate the Vec2 around</param>
+  </method>
+  <method name="toString">
+    gives a description of this object in a string, with the syntax "(x,y)"
+    <return type="string">"(x,y)"</return>
+  </method>
+  <method name="equalsXY" return="boolean">
+    returns true if the x and y attributes are respectively equal to
+    x and y parameters
+    <param type="number" name="x" />
+    <param type="number" name="y" />
+  </method>
+  <method name="equals" return="boolean">
+    returns true if parameter's x and y attributes are equal to this
+    Vec2's x and y attributes, false otherwise
+    <param type="Vec2" name="vec" />
+  </method>
+  <method name="isZero" return="boolean">
+    returns true is the attributes x and y are both equal to 0, false otherwise
+  </method>
+  <method name="getUnit">
+    create a Vec2 with the same angle as this one, but with a magnitude of 1.
+    <return type="Vec2"> a normalized verion of this Vec2</return>
+  </method>
+  <method name="getMirror">
+    create the symetric Vec2 relative to the given argument.
+    <param type="Vec2" name="center" default="ZERO" />
+    <return type="Vec2">symetric Vec2</return>
+  </method>
+  <method name="getHorizontalMirror">
+    create the symetric Vec2 relative to the vertical axis with the parameter
+    value as the abscissa
+    <param type="number" name="axisX" default="0" />
+    <return type="Vec2">horizontal symetric</return>
+  </method>
+  <method name="getVerticalMirror">
+    create the symetric Vec2 relative to the horizontal axis with the parameter
+    value as the ordinate
+    <param type="number" name="axisY" default="0" />
+    <return type="Vec2">vertical symetric</return>
+  </method>
+  <method name="mirror" return="this">
+    sets the x and y attributes in order to make it the symetric of its
+    old self relative to the given parameter
+    <param type="Vec2" name="center" default="ZERO" />
+  </method>
+  <method name="mirrorHorizontally" return="this">
+    sets the x attributes in order to make this Vec2 the symetric of its old
+    self relative to a vertical axis with the parameter value as the abscissa
+    <param type="number" name="axisX" default="0" />
+  </method>
+  <method name="mirrorVertically" return="this">
+    sets the y attributes in order to make this Vec2 the symetric of its old
+    self relative to an horizontal axis with the parameter value as the ordinate
+    <param type="number" name="axisY" default="0" />
+  </method>
+  <method name="getRoundedX">
+    returns a rounded value of the x attribute, with the parameter value
+    as the number of digits. If the parameter is equal to 0 (default),
+    this method returns the closest integer.
+    <param type="number" name="digits" default="0" />
+    <return type="number">rounded x</return>
+  </method>
+  <method name="getRoundedY">
+    returns a rounded value of the y attribute, with the parameter value
+    as the number of digits. If the parameter is equal to 0 (default),
+    this method returns the closest integer.
+    <param type="number" name="digits" default="0" />
+    <return type="number">rounded y</return>
+  </method>
+  <method name="getRoundedVec">
+    returns a Vec2 containing the rounded value of the x and y attributes,
+    with the parameter value as the number of digits. If the parameter
+    is equal to 0 (default), the attributes will be the closest integers.
+    <param type="number" name="digits" default="0" />
+    <return type="Vec2">rounded Vec2</return>
+  </method>
+  <method name="clampMagnitude" return="this">
+    if the magnitude is not in the interval [min, max],
+    this method modifies the coordinate to make the magnitude
+    to the max(if higher) or the min (if lower).
+    <param type="number" name="min">minimum magnitude</param>
+    <param type="number" name="max">maximum magnitude</param>
+  </method>
+  <method specification="static" name="dotProd">
+    returns the result of the dot product operation between the two parameters
+    <param type="Vec2" name="u" />
+    <param type="Vec2" name="v" />
+    <return type="number"> result of the dot product between u and v</return>
+  </method>
+  <method specification="static" name="vectProd">
+    returns the result of the vectorial product operation between
+    the two parameters
+    <param type="Vec2" name="u" />
+    <param type="Vec2" name="v" />
+    <return type="number"> result of the vectorial product between u and v
+    </return>
+  </method>
+  <method specification="static" name="translation">
+    returns the translation from A to B, such that :\n
+    {@code
+    //A and B are instances of Vec2\n
+    var AB = Vec2.translation(A, B);\n
+    A.add(AB).equals(B) === true;}
+    <param type="Vec2" name="A" />
+    <param type="Vec2" name="B" />
+    <return type="Vec2">the translation from {@param A} to {@param B}</return>
+  </method>
+  <method specification="static" name="squareDistance">
+    returns the square distance between A and B.
+    <param type="Vec2" name="A" />
+    <param type="Vec2" name="B" />
+    <return type="number">the distance between A and B</return>
+  </method>
+  <method specification="static" name="distance">
+    returns the distance between A and B.
+    <param type="Vec2" name="A" />
+    <param type="Vec2" name="B" />
+    <return type="number">the square distance between A and B</return>
+  </method>
+  <method specification="static" name="ccw">
+    returns true if AB and AC are in counter-clockwise order, false otherwise.
+    <param type="Vec2" name="A" />
+    <param type="Vec2" name="B" />
+    <param type="Vec2" name="C" />
+    <return type="boolean">true if AB and AC are in counter-clockwise order
+    </return>
+  </method>
+  <method specification="static" name="ccw2">
+    returns true if AB and AC are in counter-clockwise order, false otherwise.
+    <param type="Vec2" name="AB" />
+    <param type="Vec2" name="AC" />
+    <return type="boolean">true if AB and AC are in counter-clockwise order
+    </return>
+  </method>
+  <method specification="static" name="createFromRadians">
+    returns a Vec2 with the given angle {@param a} and magnitude {@param m}.
+    <param type="number" name="a">angle (in radians)</param>
+    <param type="number" name="m" default="1">magnitude</param>
+    <return type="Vec2">(cos(a)*m, sin(a)*m)</return>
+  </method>
+  <method specification="static" name="createVec2Array">
+    from a number array like this : {@code [x1, y1, x2, y2, x3, y3, ...]},
+    returns an array of Vec2 like this : {@code [(x1,y1), (x2,y2), (x3,y3), ...]}
+    <param type="Array&lt;number&gt;" name="xyxyArray">
+      {@code [x1, y1, x2, y2, x3, y3, ...]}</param>
+    <return type="Array&lt;Vec2&gt;">
+      {@code [(x1,y1), (x2,y2), (x3,y3), ...]}</return>
+  </method>
+</class>
+<!--############################################################################
+#################################### Rect ######################################
+#############################################################################-->
+<class name="Rect">
+  <constructor>
+    <param type="number" name="left" />
+    <param type="number" name="top" />
+    <param type="number" name="right"/>
+    <param type="number" name="bottom" />
+  </constructor>
+  <field visibility="public" type="number" name="left" />
+  <field visibility="public" type="number" name="top" />
+  <field visibility="public" type="number" name="right"/>
+  <field visibility="public" type="number" name="bottom" />
+
+  <property type="number" name="width" setter="false">right-left</property>
+  <property type="number" name="height" setter="false">bottom-top</property>
+  <property type="number" name="ratio" setter="false">width/height</property>
+  <property type="number" name="perimeter" setter="false">(width+height)*2</property>
+  <property type="number" name="area" setter="false">width*height</property>
+  <property type="Vec2" name="center" />
+
+  <method name="overlap">
+    <param type="Rect" name="rect" />
+    <return type="boolean">true if the intersection with {@param rect} exists
+    </return>
+  </method>
+  <method name="containsXY">
+    <param type="number" name="x"/>
+    <param type="nmuber" name="y"/>
+    <return type="boolean">true is the point ({@param x}, {@param y}) is
+      inside the ractangle
+    </return>
+  </method>
+  <method name="containsRect">
+    <param type="Rect" name="rect" />
+    <return type="boolean"> true if {@param rect} is completely inside the rectangle
+    </return>
+  </method>
+  <method name="contains">
+    <param type="Vec2" name="p" />
+    <return type="boolean"> true if the point {@param p} is inside the rectangle
+    </return>
+  </method>
+  <method name="onLeftOfXY" return="boolean">
+    <param type="number" name="x"/><param type="nmuber" name="y"/></method>
+  <method name="onLeftOfRect" return="boolean">
+    <param type="Rect" name="rect" /></method>
+  <method name="onLeftOf" return="boolean"><param type="Vec2" name="p"/></method>
+  <method name="onRightOfXY" return="boolean">
+    <param type="number" name="x"/><param type="nmuber" name="y"/></method>
+  <method name="onRightOfRect" return="boolean">
+    <param type="Rect" name="rect" /></method>
+  <method name="onRightOf" return="boolean"><param type="Vec2" name="p"/></method>
+  <method name="aboveXY" return="boolean">
+    <param type="number" name="x"/><param type="nmuber" name="y"/></method>
+  <method name="aboveRect" return="boolean">
+    <param type="Rect" name="rect" /></method>
+  <method name="above" return="boolean"><param type="Vec2" name="p"/></method>
+  <method name="belowXY" return="boolean">
+    <param type="number" name="x"/><param type="nmuber" name="y"/></method>
+  <method name="belowRect" return="boolean">
+    <param type="Rect" name="rect" /></method>
+  <method name="below" return="boolean"><param type="Vec2" name="p" /></method>
+  <method name="addMargin" return="this">
+    {@code \nleft-=margin;\ntop-=margin;\nright+=margin;\nbottom+=margin;}
+    <param type="number" name="margin"/>
+  </method>
+  <method name="addMarginsXY" return="this">{@code \n
+    left-=marginX;\ntop-=marginY;\nright+=marginX;\nbottom+=marginY;}
+    <param type="number" name="marginX"/>
+    <param type="number" name="marginY"/>
+  </method>
+  <method name="addMargins" return="this">
+    <param type="number" name="marginLeft"/>
+    <param type="number" name="marginTop"/>
+    <param type="number" name="marginRight"/>
+    <param type="number" name="marginBottom"/>
+  </method>
+  <method name="pushPath">
+    push drawing instructions to the {@param context}.
+    <param type="CanvasRenderingContext2D" name="context"/>
+  </method>
+  <method name="draw">
+    <param type="CanvasRenderingContext2D" name="context"/>
+    <param type="boolean" name="fill" />
+    <param type="boolean" name="draw" />
+  </method>
+  <method name="setRect" return="this">
+    sets left, top right and bottom fields to the values of
+    the {@param rect}'s fields
+    <param type="Rect" name="rect"/>
+  </method>
+  <method name="set" return="this">
+    sets left, top right and bottom fields to the values of the params
+    <param type="number" name="left" />
+    <param type="number" name="top" />
+    <param type="number" name="right"/>
+    <param type="number" name="bottom" />
+  </method>
+  <method name="moveXY" return="this">
+    <param type="number" name="x"/>
+    <param type="number" name="y"/>
+  </method>
+  <method name="move" return="this">
+    <param type="Vec2" name="delta"/>
+  </method>
+  <method name="getCurvePercentPoint" return="Vec2">
+    <param type="number" name="percent"/>
+  </method>
+  <method name="getShape" return="Polygon" />
+  <method name="toString" return="string" />
+  <method specification="static" name="getUnion">
+    <param type="Array&lt;Rect&gt;" name="rects"/>
+    <return type="Rect"/>
+  </method>
+  <method specification="static" name="getIntersection">
+    <param type="Array&lt;Rect&gt;" name="rects"/>
+    <return type="Rect"/>
+  </method>
+  <method specification="static" name="createFromPoint">
+    <param type="Vec2" name="p"/>
+    <return type="Rect"/>
+  </method>
+  <method specification="static" name="createFromXY">
+    <param type="number" name="x"/>
+    <param type="number" name="y"/>
+    <return type="Rect"/>
+  </method>
+  <method specification="static" name="createFromPoints">
+    <param type="Array&lt;Vec2&gt;" name="array"/>
+    <return type="Rect"/>
+  </method>
+</class>
+</doc>
